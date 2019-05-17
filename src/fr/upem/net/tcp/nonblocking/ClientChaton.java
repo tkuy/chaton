@@ -17,11 +17,10 @@ public class ClientChaton {
         private final SocketChannel sc;
         private boolean closed=false;
         final private Queue<Integer> queue = new LinkedList<>();
-        final private ArrayBlockingQueue<Integer> publicMessages;
         private Context(SelectionKey key, ArrayBlockingQueue<Integer> messages){
             this.key = key;
             this.sc = (SocketChannel) key.channel();
-            this.publicMessages = messages;
+            System.out.println(sc);
         }
 
         /**
@@ -64,6 +63,7 @@ public class ClientChaton {
                 }
             }
         }
+
         /**
          * Performs the write action on sc
          *
@@ -136,9 +136,9 @@ public class ClientChaton {
         private void doConnect() throws IOException {
             System.out.println("Do connect");
             if (!sc.finishConnect()){
+                System.out.println("failed connect");
                 return;
             }
-            //Créer les deux context et lancer updateInteretsOps
             updateInterestsOps();
         }
     }
@@ -147,39 +147,44 @@ public class ClientChaton {
     static private Logger logger = Logger.getLogger(ClientChatInt.class.getName());
 
     private final SocketChannel sc;
-    private final SocketChannel sc2;
+    //private final SocketChannel sc2;
     private final Selector selector;
     private final InetSocketAddress serverAddress;
     private SelectionKey key;
-    private SelectionKey keyPrivate;
+    //private SelectionKey keyPrivate;
     private boolean closed;
-    final private ArrayBlockingQueue<Integer> publicMessages = new ArrayBlockingQueue(10);
-    final private ArrayBlockingQueue<Integer> privateMessages = new ArrayBlockingQueue(10);
+    final private ArrayBlockingQueue<Integer> messages = new ArrayBlockingQueue(10);
+    //final private ArrayBlockingQueue<Integer> privateConnection = new ArrayBlockingQueue(10);
     public ClientChaton(int port, String address) throws IOException {
         sc = SocketChannel.open();
-        sc2 = SocketChannel.open();
+        //sc2 = SocketChannel.open();
         this.serverAddress = new InetSocketAddress(address, port);
         sc.configureBlocking(false);
-        sc2.configureBlocking(false);
+        //sc2.configureBlocking(false);
         selector = Selector.open();
     }
     public void launch() throws IOException {
         sc.configureBlocking(false);
         sc.connect(serverAddress);
+        //sc2.connect(serverAddress);
+        //Register
         key=sc.register(selector, SelectionKey.OP_CONNECT);
-        keyPrivate = sc2.register(selector, SelectionKey.OP_CONNECT);
-        Context contextPublic = new Context(key, publicMessages);
-        Context contextPrivate = new Context(keyPrivate, privateMessages);
+        //keyPrivate = sc2.register(selector, SelectionKey.OP_CONNECT);
+        //Context
+        Context contextPublic = new Context(key, messages);
+        //Context contextPrivate = new Context(keyPrivate, privateMessages);
+        //Attach
         key.attach(contextPublic);
-        keyPrivate.attach(contextPrivate);
+        //keyPrivate.attach(contextPrivate);
         Set selectedKeys = selector.selectedKeys();
         while (!Thread.interrupted()) {
             selector.select();
             processSelectedKeys();
             selectedKeys.clear();
             Integer value;
-            while((value=publicMessages.poll()) != null) {
+            while((value= messages.poll()) != null) {
                 contextPublic.queueMessage(value);
+                //contextPrivate.queueMessage(value);
             }
         }
     }
@@ -209,7 +214,8 @@ public class ClientChaton {
             try(Scanner sc = new Scanner(System.in)){
                 while(sc.hasNextLine()) {
                     line = sc.nextLine();
-                    publicMessages.offer(Integer.parseInt(line));
+                    messages.offer(Integer.parseInt(line));
+                    //privateMessages.offer(2495);
                     selector.wakeup();
                 }
             }
