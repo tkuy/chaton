@@ -18,7 +18,7 @@ public class ClientChaton {
         private boolean closed=false;
         final private Queue<Integer> queue = new LinkedList<>();
         final private ArrayBlockingQueue<Integer> publicMessages;
-        private Context(SelectionKey key, SocketChannel sc, ArrayBlockingQueue<Integer> messages){
+        private Context(SelectionKey key, ArrayBlockingQueue<Integer> messages){
             this.key = key;
             this.sc = (SocketChannel) key.channel();
             this.publicMessages = messages;
@@ -147,25 +147,31 @@ public class ClientChaton {
     static private Logger logger = Logger.getLogger(ClientChatInt.class.getName());
 
     private final SocketChannel sc;
+    private final SocketChannel sc2;
     private final Selector selector;
     private final InetSocketAddress serverAddress;
     private SelectionKey key;
     private SelectionKey keyPrivate;
     private boolean closed;
     final private ArrayBlockingQueue<Integer> publicMessages = new ArrayBlockingQueue(10);
-    final private Queue<Integer> privateMessages = new ArrayBlockingQueue(10);
+    final private ArrayBlockingQueue<Integer> privateMessages = new ArrayBlockingQueue(10);
     public ClientChaton(int port, String address) throws IOException {
         sc = SocketChannel.open();
+        sc2 = SocketChannel.open();
         this.serverAddress = new InetSocketAddress(address, port);
         sc.configureBlocking(false);
+        sc2.configureBlocking(false);
         selector = Selector.open();
     }
     public void launch() throws IOException {
         sc.configureBlocking(false);
         sc.connect(serverAddress);
         key=sc.register(selector, SelectionKey.OP_CONNECT);
-        Context contextPublic = new Context(key, sc, publicMessages);
+        keyPrivate = sc2.register(selector, SelectionKey.OP_CONNECT);
+        Context contextPublic = new Context(key, publicMessages);
+        Context contextPrivate = new Context(keyPrivate, privateMessages);
         key.attach(contextPublic);
+        keyPrivate.attach(contextPrivate);
         Set selectedKeys = selector.selectedKeys();
         while (!Thread.interrupted()) {
             selector.select();
@@ -201,7 +207,6 @@ public class ClientChaton {
         new Thread(() -> {
             String line;
             try(Scanner sc = new Scanner(System.in)){
-                //Public
                 while(sc.hasNextLine()) {
                     line = sc.nextLine();
                     publicMessages.offer(Integer.parseInt(line));
