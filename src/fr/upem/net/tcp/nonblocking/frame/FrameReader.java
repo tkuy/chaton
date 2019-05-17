@@ -45,9 +45,11 @@ public class FrameReader implements Reader {
 		case WAITING_OP:
 			if(opCodeReader.process() == ProcessStatus.DONE) {
 				int opCode =(int) opCodeReader.get();
+				System.out.println("opCode= "+opCode);
 				state = State.WAITING_FRAME;
-				if(updateFrameType(opCode)) {
+				if(!updateFrameType(opCode)) {
 					reset();
+					System.out.println("OPCODE ERROR");
 					return ProcessStatus.ERROR;
 				}
 				opCodeReader.reset();
@@ -55,15 +57,18 @@ public class FrameReader implements Reader {
 			}else {
 				return ProcessStatus.REFILL;
 			}
-			break;
+			
 		case WAITING_FRAME:
+			System.out.println(currentReader);
 			if(currentReader == null) {
 				return ProcessStatus.ERROR;
 			}
 			if(currentReader.process() == ProcessStatus.DONE) {
-				result = (Frame) frameLoginReader.get();
+				result = (Frame) currentReader.get();
 				state=State.DONE;
 				currentReader.reset();
+				reset();
+				return ProcessStatus.DONE;
 			} else {
 				return ProcessStatus.REFILL;
 			}
@@ -79,6 +84,7 @@ public class FrameReader implements Reader {
 			frameType = FrameType.LOGIN;
 			break;
 		case 3:
+			System.out.println("in case 3");
 			currentReader = this.frameBroadcastReader;
 			frameType = FrameType.BROADCAST;
 			break;

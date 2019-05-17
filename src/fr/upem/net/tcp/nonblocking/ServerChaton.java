@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fr.upem.net.tcp.nonblocking.frame.Frame;
+import fr.upem.net.tcp.nonblocking.frame.FrameBroadcast;
 import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
 import fr.upem.net.tcp.nonblocking.frame.FrameReader;
 
@@ -55,18 +56,21 @@ public class ServerChaton {
         private void processIn() {
         	
         	for(;;){
+        		
 				Reader.ProcessStatus status = frameReader.process();
+				System.out.println("status="+status);
 				switch (status){
 					case DONE:
 						Frame frame = (Frame) frameReader.get();
-						FrameLogin frameLogin = (FrameLogin) frame;
-						System.out.println(frameLogin.getLogin());
+						FrameBroadcast frameBroadcast = (FrameBroadcast) frame;
+						System.out.println(frameBroadcast.getLogin());
 						frameReader.reset();
 						break;
 					case REFILL:
 						return;
 					case ERROR:
-						silentlyClose();
+						//silentlyClose();
+						System.out.println("Error in processIn");
 						return;
 				}
 			}
