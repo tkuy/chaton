@@ -4,7 +4,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.Channel;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -13,6 +18,10 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import fr.upem.net.tcp.nonblocking.frame.Frame;
+import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
+import fr.upem.net.tcp.nonblocking.frame.FrameReader;
 
 public class ServerChaton {
 
@@ -25,16 +34,17 @@ public class ServerChaton {
         final private Queue<Message> queue = new LinkedList<>();
         final private ServerChaton server;
         private boolean closed = false;
-        private MessageReader messageReader;
+      
         private static Charset UTF8 = StandardCharsets.UTF_8;
+        private FrameReader frameReader = new FrameReader(bbin);
 
         private Context(ServerChaton server, SelectionKey key){
             this.key = key;
             this.sc = (SocketChannel) key.channel();
             this.server = server;
-            this.messageReader = new MessageReader(bbin);
+            
         }
-
+        
         /**
          * Process the content of bbin
          *
@@ -43,13 +53,15 @@ public class ServerChaton {
          *
          */
         private void processIn() {
-			for(;;){
-				Reader.ProcessStatus status = messageReader.process();
+        	
+        	for(;;){
+				Reader.ProcessStatus status = frameReader.process();
 				switch (status){
 					case DONE:
-						Message value = (Message) messageReader.get();
-						server.broadcast(value);
-						messageReader.reset();
+						Frame frame = (Frame) frameReader.get();
+						FrameLogin frameLogin = (FrameLogin) frame;
+						System.out.println(frameLogin.getLogin());
+						frameReader.reset();
 						break;
 					case REFILL:
 						return;

@@ -177,6 +177,8 @@ public class ClientChaton {
         key.attach(contextPublic);
         //keyPrivate.attach(contextPrivate);
         Set selectedKeys = selector.selectedKeys();
+        
+        
         while (!Thread.interrupted()) {
             selector.select();
             processSelectedKeys();

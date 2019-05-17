@@ -1,6 +1,6 @@
 package fr.upem.net.tcp.nonblocking.frame;
 
-public class FrameLogin {
+public class FrameLogin implements Frame{
     private static final int OP_CODE = 0;
     private final String login;
     public FrameLogin(String login) {
