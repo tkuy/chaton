@@ -10,7 +10,6 @@ public class FrameLogin implements Frame{
     private static final int OP_CODE = 0;
     private final String login;
     private final static Charset UTF8 = StandardCharsets.UTF_8;
-    private ByteBuffer bb;
     public FrameLogin(String login) {
         this.login = login;
     }
@@ -26,12 +25,10 @@ public class FrameLogin implements Frame{
 
     @Override
     public ByteBuffer toByteBuffer() {
-        if(bb==null) {
-            ByteBuffer login = UTF8.encode(this.login);
-            this.bb = ByteBuffer.allocate(login.remaining() + Integer.BYTES);
-            this.bb.putInt(login.remaining()).put(login);
-        }
-        return this.bb;
+        ByteBuffer login = UTF8.encode(this.login);
+        ByteBuffer bb = ByteBuffer.allocate(login.remaining() + Integer.BYTES);
+        bb.putInt(login.remaining()).put(login);
+        return bb;
     }
 
     public String getLogin() {

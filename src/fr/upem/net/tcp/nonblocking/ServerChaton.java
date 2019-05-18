@@ -23,7 +23,6 @@ import fr.upem.net.tcp.nonblocking.frame.Frame;
 import fr.upem.net.tcp.nonblocking.frame.FrameBroadcast;
 import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
 import fr.upem.net.tcp.nonblocking.frame.FrameReader;
-import fr.upem.net.tcp.nonblocking.frame.writer.FrameLoginResponseWriter;
 
 public class ServerChaton {
 
@@ -39,8 +38,6 @@ public class ServerChaton {
       
         private static Charset UTF8 = StandardCharsets.UTF_8;
         private FrameReader frameReader = new FrameReader(bbin);
-
-        private FrameLoginResponseWriter frameLoginResponseWriter = new FrameLoginResponseWriter(bbout);
 
         private Context(ServerChaton server, SelectionKey key){
             this.key = key;

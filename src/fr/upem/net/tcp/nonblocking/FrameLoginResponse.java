@@ -33,9 +33,6 @@ public class FrameLoginResponse implements Frame {
 
     @Override
     public ByteBuffer toByteBuffer() {
-        if(bb==null) {
-            ByteBuffer.allocate(Integer.BYTES).putInt(response);
-        }
-        return this.bb;
+        return ByteBuffer.allocate(Integer.BYTES).putInt(response);
     }
 }
