@@ -23,6 +23,7 @@ import fr.upem.net.tcp.nonblocking.frame.Frame;
 import fr.upem.net.tcp.nonblocking.frame.FrameBroadcast;
 import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
 import fr.upem.net.tcp.nonblocking.frame.FrameReader;
+import fr.upem.net.tcp.nonblocking.frame.writer.FrameLoginResponseWriter;
 
 public class ServerChaton {
 
@@ -32,7 +33,7 @@ public class ServerChaton {
         final private SocketChannel sc;
         final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
         final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
-        final private Queue<Message> queue = new LinkedList<>();
+        final private Queue<Frame> queue = new LinkedList<>();
         final private ServerChaton server;
         private boolean closed = false;
       
@@ -62,8 +63,9 @@ public class ServerChaton {
 				switch (status){
 					case DONE:
 						Frame frame = (Frame) frameReader.get();
-						FrameBroadcast frameBroadcast = (FrameBroadcast) frame;
-						System.out.println(frameBroadcast.getLogin());
+						frame.accept(this);
+						//FrameBroadcast frameBroadcast = (FrameBroadcast) frame;
+						//System.out.println(frameBroadcast.getLogin());
 						frameReader.reset();
 						break;
 					case REFILL:
@@ -79,10 +81,10 @@ public class ServerChaton {
         /**
          * Add a message to the message queue, tries to fill bbOut and updateInterestOps
          *
-         * @param msg
+         * @param frame
          */
-        private void queueMessage(Message msg) {
-        	queue.add(msg);
+        private void queueFrame(Frame frame) {
+        	queue.add(frame);
         	processOut();
         	updateInterestOps();
         }
@@ -93,13 +95,13 @@ public class ServerChaton {
          */
         private void processOut() {
         	while (!queue.isEmpty()) {
-				Message msg = queue.element();
-				ByteBuffer login = UTF8.encode(msg.getLogin());
-				ByteBuffer text = UTF8.encode(msg.getText());
-				if (bbout.remaining() >= Integer.BYTES * 2 + login.remaining() + text.remaining()) {
-					bbout.putInt(login.remaining()).put(login).putInt(text.remaining()).put(text);
+				Frame frame = queue.element();
+				ByteBuffer bb = frame.toByteBuffer();
+				if(bbout.remaining() >= bb.limit()) {
+					bbout.put(bb);
 					queue.poll();
 				} else {
+					bb.compact();
 					return;
 				}
 			}
@@ -175,20 +177,18 @@ public class ServerChaton {
 		@Override
 		public void visitLoginFrame(FrameLogin frame) {
 			String login = frame.getLogin();
+			FrameLoginResponse frameResponse;
 			if(!server.pseudos.contains(login)) {
-				server.pseudos.add(login);
-				//LoginResponseWriter loginResponseWriter = new LoginResponseWriter(LoginResponse.ACCEPT);
-
-
+				frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_ACCEPTED);
 			} else {
-				//LoginResponseWriter loginResponseWriter = new LoginResponseWriter(LoginResponse.REFUSED);
-
+				frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_REFUSED);
 			}
+			queueFrame(frameResponse);
 		}
 
 		@Override
-		public void visitBroadcastFrame(FrameLogin frame) {
-
+		public void visitBroadcastFrame(FrameBroadcast frame) {
+			server.broadcast(frame);
 		}
 	}
 
@@ -264,14 +264,14 @@ public class ServerChaton {
     /**
      * Add a message to all connected clients queue
      *
-     * @param msg
+     * @param frame
      */
-    private void broadcast(Message msg) {
+    private void broadcast(Frame frame) {
 		for (SelectionKey key : selector.keys()) {
 			Object attachment = key.attachment();
 			if(attachment!=null) {
 				Context ctx = (Context) key.attachment();
-				ctx.queueMessage(msg);
+				ctx.queueFrame(frame);
 			}
 		}
 
