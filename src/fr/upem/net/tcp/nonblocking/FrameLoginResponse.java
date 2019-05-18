@@ -8,6 +8,7 @@ public class FrameLoginResponse implements Frame {
     public final static int LOGIN_ACCEPTED = 1;
     public final static int LOGIN_REFUSED = 2;
     private final int response;
+    private ByteBuffer bb;
 
     public FrameLoginResponse(int response) {
         if(response != LOGIN_ACCEPTED && response != LOGIN_REFUSED) {
@@ -27,12 +28,14 @@ public class FrameLoginResponse implements Frame {
 
     @Override
     public void accept(FrameVisitor visitor) {
-        //TODO
+        visitor.visitResponseLoginFrame(this);
     }
 
     @Override
     public ByteBuffer toByteBuffer() {
-        //TODO
-        return null;
+        if(bb==null) {
+            ByteBuffer.allocate(Integer.BYTES).putInt(response);
+        }
+        return this.bb;
     }
 }

@@ -28,7 +28,6 @@ public class FrameBroadcast implements Frame {
 
     @Override
     public ByteBuffer toByteBuffer() {
-        //FIXME
         if(this.bb==null) {
             ByteBuffer login = UTF8.encode(this.login);
             ByteBuffer message = UTF8.encode(this.message);
@@ -48,4 +47,5 @@ public class FrameBroadcast implements Frame {
     public String getLogin() {
         return login;
     }
+
 }

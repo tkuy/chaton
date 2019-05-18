@@ -40,6 +40,8 @@ public class ServerChaton {
         private static Charset UTF8 = StandardCharsets.UTF_8;
         private FrameReader frameReader = new FrameReader(bbin);
 
+        private FrameLoginResponseWriter frameLoginResponseWriter = new FrameLoginResponseWriter(bbout);
+
         private Context(ServerChaton server, SelectionKey key){
             this.key = key;
             this.sc = (SocketChannel) key.channel();
@@ -186,7 +188,12 @@ public class ServerChaton {
 			queueFrame(frameResponse);
 		}
 
-		@Override
+        @Override
+        public void visitResponseLoginFrame(FrameLoginResponse frame) {
+            queueFrame(frame);
+        }
+
+        @Override
 		public void visitBroadcastFrame(FrameBroadcast frame) {
 			server.broadcast(frame);
 		}
