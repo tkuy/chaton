@@ -26,7 +26,7 @@ import fr.upem.net.tcp.nonblocking.frame.FrameReader;
 
 public class ServerChaton {
 
-    static private class Context {
+    static private class Context implements FrameVisitor{
 
         final private SelectionKey key;
         final private SocketChannel sc;
@@ -171,11 +171,30 @@ public class ServerChaton {
 			processOut();
 			updateInterestOps();
         }
-    }
+
+		@Override
+		public void visitLoginFrame(FrameLogin frame) {
+			String login = frame.getLogin();
+			if(!server.pseudos.contains(login)) {
+				server.pseudos.add(login);
+				//LoginResponseWriter loginResponseWriter = new LoginResponseWriter(LoginResponse.ACCEPT);
+
+
+			} else {
+				//LoginResponseWriter loginResponseWriter = new LoginResponseWriter(LoginResponse.REFUSED);
+
+			}
+		}
+
+		@Override
+		public void visitBroadcastFrame(FrameLogin frame) {
+
+		}
+	}
 
     static private int BUFFER_SIZE = 1_024;
     static private Logger logger = Logger.getLogger(ServerChaton.class.getName());
-
+	private final ArrayList<String> pseudos = new ArrayList<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
 
