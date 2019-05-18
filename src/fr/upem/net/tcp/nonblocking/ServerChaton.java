@@ -12,10 +12,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -177,8 +174,9 @@ public class ServerChaton {
 		public void visitLoginFrame(FrameLogin frame) {
 			String login = frame.getLogin();
 			FrameLoginResponse frameResponse;
-			if(!server.pseudos.contains(login)) {
+			if(!server.pseudos.containsKey(login)) {
 				frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_ACCEPTED);
+				server.pseudos.put(login, this);
 			} else {
 				frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_REFUSED);
 			}
@@ -198,7 +196,7 @@ public class ServerChaton {
 
     static private int BUFFER_SIZE = 1_024;
     static private Logger logger = Logger.getLogger(ServerChaton.class.getName());
-	private final ArrayList<String> pseudos = new ArrayList<>();
+	private final Map<String, Context> pseudos = new HashMap<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
 
