@@ -28,8 +28,8 @@ public class FrameLogin implements Frame{
     public ByteBuffer toByteBuffer() {
         if(bb==null) {
             ByteBuffer login = UTF8.encode(this.login);
-            login.flip();
             this.bb = ByteBuffer.allocate(login.remaining() + Integer.BYTES);
+            this.bb.putInt(login.remaining()).put(login);
         }
         return this.bb;
     }
