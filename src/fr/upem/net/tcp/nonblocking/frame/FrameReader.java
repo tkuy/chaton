@@ -67,7 +67,6 @@ public class FrameReader implements Reader {
 				result = (Frame) currentReader.get();
 				state=State.DONE;
 				currentReader.reset();
-				reset();
 				return ProcessStatus.DONE;
 			} else {
 				return ProcessStatus.REFILL;
