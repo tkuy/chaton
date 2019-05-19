@@ -24,7 +24,6 @@ public class FrameReader implements Reader {
 	private FrameType frameType;
 	private Reader currentReader;
 	
-	private final FrameLoginReader frameLoginReader;
 	private final FrameBroadcastReader frameBroadcastReader;
 	private final FramePrivateMessageReader privateMessageReader;
 	
@@ -36,7 +35,6 @@ public class FrameReader implements Reader {
 		super();
 		this.bbin = bbin;
 		this.opCodeReader = new IntReader(bbin);
-		this.frameLoginReader = new FrameLoginReader(bbin);
 		this.frameBroadcastReader = new FrameBroadcastReader(bbin);
 		this.privateMessageReader = new FramePrivateMessageReader(bbin);
 	}
