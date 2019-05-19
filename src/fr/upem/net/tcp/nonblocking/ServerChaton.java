@@ -84,6 +84,7 @@ public class ServerChaton {
 								frame.accept(this);
 								state = State.AUTHENTICATED;
 								frameLoginReader.reset();
+								logger.info("The user is now authenticated as "+ login);
 								processIn();
 							case REFILL:
 								return;
@@ -117,6 +118,7 @@ public class ServerChaton {
          * @param frame
          */
         private void queueFrame(Frame frame) {
+        	logger.info("Type of frame : "+frame.getOpCode() + " from "+login);
         	queue.add(frame);
         	processOut();
         	updateInterestOps();
@@ -239,27 +241,36 @@ public class ServerChaton {
 
         @Override
         public void visitPrivateMessage(FramePrivateMessage frame) {
-			if(frame.getSender().equals(login)) {
-				Context targetCtx = server.pseudos.get(frame.getTarget());
-				if(targetCtx!=null) {
-					targetCtx.queueFrame(frame);
-				}
+			Context targetCtx = server.pseudos.get(frame.getTarget());
+			if(frame.getSender().equals(login) && targetCtx!=null) {
+				logger.info("Private message from "+frame.getSender() + " to "+ frame.getTarget());
+				targetCtx.queueFrame(frame);
+			} else {
+				logger.info("Private message from "+frame.getSender() + " to "+ frame.getTarget() + "failed");
 			}
 		}
 
 		@Override
 		public void visitPrivateConnection(FramePrivateConnection frame) {
-			if(frame.getRequester().equals(login)) {
-				Context targetCtx = server.pseudos.get(frame.getTarget());
-				if(targetCtx!=null) {
-					targetCtx.queueFrame(frame);
-					server.requests.put(frame.getRequester(), frame.getTarget());
-				}
+			Context targetCtx = server.pseudos.get(frame.getTarget());
+			if(frame.getRequester().equals(login) && targetCtx!=null) {
+				targetCtx.queueFrame(frame);
+				server.requests.put(frame.getRequester(), frame.getTarget());
+				logger.info("Private connection request from "+frame.getRequester() + " to "+ frame.getTarget());
+			} else {
+				logger.info("Private connection request from "+frame.getRequester() + " to "+ frame.getTarget() + "failed");
 			}
 		}
 
 		@Override
 		public void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame) {
+			if(frame.getOpCode() == FramePrivateConnectionResponse.OK_PRIVATE) {
+				//Creation of context
+
+			} else if(frame.getOpCode() == FramePrivateConnectionResponse.KO_PRIVATE){
+
+			}
+			server.requests.remove(frame.getRequester(), frame.getTarget());
 
 		}
 	}
