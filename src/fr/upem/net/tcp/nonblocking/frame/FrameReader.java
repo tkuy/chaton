@@ -86,6 +86,8 @@ public class FrameReader implements Reader {
 				frameType = FrameType.BROADCAST;
 				break;
 			case 4:
+				
+				System.out.println("here case 4");
 				currentReader = this.privateMessageReader;
 				frameType = FrameType.PRIVATE_MESSAGE;
 				break;

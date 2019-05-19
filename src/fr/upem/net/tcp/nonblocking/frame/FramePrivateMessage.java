@@ -47,7 +47,7 @@ public class FramePrivateMessage implements Frame{
         ByteBuffer sender = UTF8.encode(this.sender);
         ByteBuffer target = UTF8.encode(this.target);
         ByteBuffer content = UTF8.encode(this.content);
-        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES * 3 + sender.remaining() + target.remaining() + content.remaining());
+        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES * 4 + sender.remaining() + target.remaining() + content.remaining());
         bb.putInt(OP_CODE).putInt(sender.remaining()).put(sender)
                 .putInt(target.remaining()).put(target)
                 .putInt(content.remaining()).put(content);

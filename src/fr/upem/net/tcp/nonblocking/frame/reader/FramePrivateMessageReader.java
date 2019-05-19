@@ -3,6 +3,7 @@ package fr.upem.net.tcp.nonblocking.frame.reader;
 import fr.upem.net.tcp.nonblocking.Reader;
 import fr.upem.net.tcp.nonblocking.StringReader;
 import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
+import fr.upem.net.tcp.nonblocking.frame.FramePrivateMessage;
 import fr.upem.net.tcp.nonblocking.frame.FrameReader;
 
 import java.nio.ByteBuffer;
@@ -44,7 +45,7 @@ public class FramePrivateMessageReader implements Reader {
                 }
             case WAITING_CONTENT:
                 if (stringReader.process() == ProcessStatus.DONE) {
-                    target = (String) stringReader.get();
+                    content = (String) stringReader.get();
                     stringReader.reset();
                     state = State.DONE;
                     return ProcessStatus.DONE;
@@ -60,7 +61,8 @@ public class FramePrivateMessageReader implements Reader {
         if (state != State.DONE) {
             throw new IllegalStateException();
         }
-        return null;
+        System.out.println(sender + target + content);
+        return new FramePrivateMessage(sender,target,content);
     }
 
     @Override

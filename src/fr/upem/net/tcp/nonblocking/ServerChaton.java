@@ -98,6 +98,9 @@ public class ServerChaton {
                         switch (frameReader.process()) {
                             case DONE:
                                 Frame frame = (Frame) frameReader.get();
+                                if(frame==null) {
+                                	System.out.println("frame is null");
+                                }
                                 frame.accept(this);
                                 frameReader.reset();
                                 break;
