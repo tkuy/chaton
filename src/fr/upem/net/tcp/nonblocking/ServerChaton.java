@@ -235,6 +235,7 @@ public class ServerChaton {
         @Override
 		public void visitBroadcastFrame(FrameBroadcast frame) {
 			if(frame.getSender().equals(login)) {
+				logger.info("Broadcast frame send by "+ login);
 				server.broadcast(frame);
 			}
 		}
