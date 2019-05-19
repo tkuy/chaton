@@ -29,6 +29,18 @@ public class FramePrivateMessage implements Frame{
         visitor.visitPrivateMessage(this);
     }
 
+    public String getSender() {
+        return sender;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
     @Override
     public ByteBuffer toByteBuffer() {
         //MESSAGE_PRIVATE(4) = 4 (OPCODE) login_sender (STRING) login_target (STRING) msg (STRING)

@@ -8,11 +8,11 @@ import java.nio.charset.StandardCharsets;
 
 public class FrameBroadcast implements Frame {
     private static final int OP_CODE = 3;
-    private final String login;
+    private final String sender;
     private final String message;
     private final static Charset UTF8 = StandardCharsets.UTF_8;
     public FrameBroadcast(String login, String message) {
-        this.login = login;
+        this.sender = login;
         this.message = message;
     }
 
@@ -27,7 +27,7 @@ public class FrameBroadcast implements Frame {
 
     @Override
     public ByteBuffer toByteBuffer() {
-        ByteBuffer login = UTF8.encode(this.login);
+        ByteBuffer login = UTF8.encode(this.sender);
         ByteBuffer message = UTF8.encode(this.message);
         ByteBuffer bb = ByteBuffer.allocate(login.remaining() + message.remaining() + Integer.BYTES * 3);
         bb.putInt(3).putInt(login.remaining()).put(login).putInt(message.remaining()).put(message);
@@ -38,8 +38,7 @@ public class FrameBroadcast implements Frame {
         return message;
     }
 
-    public String getLogin() {
-        return login;
+    public String getSender() {
+        return sender;
     }
-
 }

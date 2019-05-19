@@ -29,6 +29,8 @@ public class ServerChaton {
         final private Queue<Frame> queue = new LinkedList<>();
         final private ServerChaton server;
         private boolean closed = false;
+        private boolean authenticated;
+        private String login;
       
         private static Charset UTF8 = StandardCharsets.UTF_8;
         private FrameReader frameReader = new FrameReader(bbin);
@@ -37,6 +39,7 @@ public class ServerChaton {
             this.key = key;
             this.sc = (SocketChannel) key.channel();
             this.server = server;
+            this.authenticated = false;
             
         }
         
@@ -171,6 +174,7 @@ public class ServerChaton {
 			if(!server.pseudos.containsKey(login)) {
 				frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_ACCEPTED);
 				server.pseudos.put(login, this);
+				this.login = login;
 				logger.info("Connection accepted");
 			} else {
 				frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_REFUSED);
@@ -186,14 +190,18 @@ public class ServerChaton {
 
         @Override
 		public void visitBroadcastFrame(FrameBroadcast frame) {
-			server.broadcast(frame);
+			if(frame.getSender().equals(login)) {
+				server.broadcast(frame);
+			}
 		}
 
         @Override
         public void visitPrivateMessage(FramePrivateMessage framePrivateMessage) {
-            //server.pseudos.get()
-            //TODO
-        }
+			if(framePrivateMessage.getSender().equals(login)) {
+				Context targetCtx = server.pseudos.get(framePrivateMessage.getTarget());
+				targetCtx.queueFrame(framePrivateMessage);
+			}
+		}
     }
 
     static private int BUFFER_SIZE = 1_024;
