@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fr.upem.net.tcp.nonblocking.frame.*;
+import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
 
 public class ServerChaton {
 
@@ -29,18 +30,23 @@ public class ServerChaton {
         final private Queue<Frame> queue = new LinkedList<>();
         final private ServerChaton server;
         private boolean closed = false;
-        private boolean authenticated;
         private String login;
+        private State state;
+
       
         private static Charset UTF8 = StandardCharsets.UTF_8;
         private FrameReader frameReader = new FrameReader(bbin);
-
+        private FrameLoginReader frameLoginReader = new FrameLoginReader(bbin);
+        private IntReader opLoginReader = new IntReader(bbin);
         private Context(ServerChaton server, SelectionKey key){
             this.key = key;
             this.sc = (SocketChannel) key.channel();
             this.server = server;
-            this.authenticated = false;
-            
+            this.state = State.WAITING_OP;
+        }
+
+        private enum State {
+            WAITING_OP, WAITING_FRAME_LOGIN, AUTHENTICATED
         }
         
         /**
@@ -51,22 +57,57 @@ public class ServerChaton {
          *
          */
         private void processIn() {
-        	
         	for(;;){
-        		
-				switch (frameReader.process()){
-					case DONE:
-						Frame frame = (Frame) frameReader.get();
-						frame.accept(this);
-						frameReader.reset();
-						break;
-					case REFILL:
-						return;
-					case ERROR:
-						silentlyClose();
-						System.out.println("Error in processIn");
-						return;
-				}
+        		switch (state) {
+					case WAITING_OP:
+						//Waiting OP = 0 to start the connection
+						switch (opLoginReader.process()) {
+							case DONE:
+								int op = (int) opLoginReader.get();
+								if (op == 0) {
+									System.out.println("GET OP 0");
+									this.state = State.WAITING_FRAME_LOGIN;
+									opLoginReader.reset();
+									processIn();
+								}
+							case REFILL:
+								return;
+							case ERROR:
+								silentlyClose();
+								return;
+						}
+					case WAITING_FRAME_LOGIN:
+						//Waiting login
+						switch (frameLoginReader.process()) {
+							case DONE:
+								Frame frame = (Frame) frameLoginReader.get();
+								frame.accept(this);
+								state = State.AUTHENTICATED;
+								frameLoginReader.reset();
+								processIn();
+							case REFILL:
+								return;
+							case ERROR:
+								silentlyClose();
+								System.out.println("Error in processIn");
+								return;
+						}
+                    case AUTHENTICATED:
+						//Use the FrameReader that read only allowed frame when user is authenticated
+                        switch (frameReader.process()) {
+                            case DONE:
+                                Frame frame = (Frame) frameReader.get();
+                                frame.accept(this);
+                                frameReader.reset();
+                                break;
+                            case REFILL:
+                                return;
+                            case ERROR:
+                                silentlyClose();
+                                System.out.println("Error in processIn");
+                                return;
+                        }
+                }
 			}
         }
 

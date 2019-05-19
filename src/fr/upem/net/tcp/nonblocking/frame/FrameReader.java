@@ -7,11 +7,12 @@ import fr.upem.net.tcp.nonblocking.IntReader;
 import fr.upem.net.tcp.nonblocking.Reader;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameBroadcastReader;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
+import fr.upem.net.tcp.nonblocking.frame.reader.FramePrivateMessageReader;
 
 public class FrameReader implements Reader {
 
 	private enum FrameType{
-		LOGIN, BROADCAST, NONE
+		BROADCAST, PRIVATE_MESSAGE, NONE
 	}
 	private enum State{
 		DONE,WAITING_OP,WAITING_FRAME,ERROR
@@ -25,6 +26,7 @@ public class FrameReader implements Reader {
 	
 	private final FrameLoginReader frameLoginReader;
 	private final FrameBroadcastReader frameBroadcastReader;
+	private final FramePrivateMessageReader privateMessageReader;
 	
 	 private final ByteBuffer bbin;
 	 private final static Logger logger = Logger.getLogger(FrameReader.class.toString());
@@ -36,7 +38,7 @@ public class FrameReader implements Reader {
 		this.opCodeReader = new IntReader(bbin);
 		this.frameLoginReader = new FrameLoginReader(bbin);
 		this.frameBroadcastReader = new FrameBroadcastReader(bbin);
-		
+		this.privateMessageReader = new FramePrivateMessageReader(bbin);
 	}
 
 	@Override
@@ -77,17 +79,17 @@ public class FrameReader implements Reader {
 
 	private boolean updateFrameType(int opCode) {
 		switch(opCode) {
-		case 0:
-			currentReader = this.frameLoginReader;
-			frameType = FrameType.LOGIN;
-			break;
-		case 3:
-			currentReader = this.frameBroadcastReader;
-			frameType = FrameType.BROADCAST;
-			break;
-		default:
-			frameType = FrameType.NONE;
-			return false;
+			case 3:
+				currentReader = this.frameBroadcastReader;
+				frameType = FrameType.BROADCAST;
+				break;
+			case 4:
+				currentReader = this.privateMessageReader;
+				frameType = FrameType.PRIVATE_MESSAGE;
+				break;
+			default:
+				frameType = FrameType.NONE;
+				return false;
 		}
 		return true;
 	}
