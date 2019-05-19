@@ -133,6 +133,7 @@ public class ServerChaton {
 				Frame frame = queue.element();
 				System.out.println("Send with opCode : "+frame.getOpCode());
 				ByteBuffer bb = frame.toByteBuffer();
+				bb.flip();
 				if(bbout.remaining() >= bb.limit()) {
 					bbout.put(bb);
 					queue.poll();
