@@ -2,6 +2,7 @@ package fr.upem.net.tcp.nonblocking.frame.reader;
 
 import fr.upem.net.tcp.nonblocking.MessageReader;
 import fr.upem.net.tcp.nonblocking.Reader;
+import fr.upem.net.tcp.nonblocking.StringReader;
 import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
 
 import java.nio.ByteBuffer;
@@ -9,14 +10,12 @@ import java.nio.ByteBuffer;
 public class FrameLoginReader implements Reader {
     private enum State {DONE, WAITING_LOGIN, ERROR}
 
-    private final ByteBuffer bb;
     private State state = State.WAITING_LOGIN;
     private String login;
-    private MessageReader messageReader;
+    private StringReader stringReader;
 
     public FrameLoginReader(ByteBuffer bb) {
-        this.bb = bb;
-        this.messageReader = new MessageReader(bb);
+        this.stringReader = new StringReader(bb);
     }
 
     @Override
@@ -26,10 +25,14 @@ public class FrameLoginReader implements Reader {
         }
         switch (state) {
             case WAITING_LOGIN:
-                if (messageReader.process() == ProcessStatus.DONE) {
-                    login = (String) messageReader.get();
-                    messageReader.reset();
+                ProcessStatus status = stringReader.process();
+                System.out.println(status);
+                if (status == ProcessStatus.DONE) {
+                    login = (String) stringReader.get();
+                    System.out.println(login);
+                    stringReader.reset();
                     state = State.DONE;
+                    return ProcessStatus.DONE;
                 } else {
                     return ProcessStatus.REFILL;
                 }

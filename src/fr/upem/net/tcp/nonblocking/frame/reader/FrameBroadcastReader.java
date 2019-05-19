@@ -3,24 +3,21 @@ package fr.upem.net.tcp.nonblocking.frame.reader;
 import fr.upem.net.tcp.nonblocking.Message;
 import fr.upem.net.tcp.nonblocking.MessageReader;
 import fr.upem.net.tcp.nonblocking.Reader;
-import fr.upem.net.tcp.nonblocking.StringReader;
 import fr.upem.net.tcp.nonblocking.frame.FrameBroadcast;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 
 public class FrameBroadcastReader implements Reader {
-    private enum State {DONE, WAITING_LOGIN, WAITING_TEXT, ERROR}
+    private enum State {DONE, WAITING_MESSAGE, ERROR}
 
     private final ByteBuffer bb;
-    private State state = State.WAITING_LOGIN;
-    private String login;
-    private String text;
-    private StringReader stringReader;
+    private State state = State.WAITING_MESSAGE;
+    private Message message;
+    private MessageReader messageReader;
 
     public FrameBroadcastReader(ByteBuffer bb) {
         this.bb = bb;
-        this.stringReader = new StringReader(bb);
+        this.messageReader = new MessageReader(bb);
     }
 
     @Override
@@ -29,23 +26,16 @@ public class FrameBroadcastReader implements Reader {
             throw new IllegalStateException();
         }
         switch (state) {
-            case WAITING_LOGIN:
-                if (stringReader.process() == ProcessStatus.DONE) {
-                    login = (String) stringReader.get();
-                    stringReader.reset();
-                    state = State.WAITING_TEXT;
-                } else {
-                    return ProcessStatus.REFILL;
-                }
-            case WAITING_TEXT:
-                if (stringReader.process() == ProcessStatus.DONE) {
-                    text = (String) stringReader.get();
-                    stringReader.reset();
+            case WAITING_MESSAGE:
+                if (messageReader.process() == ProcessStatus.DONE) {
+                    message = (Message) messageReader.get();
+                    messageReader.reset();
                     state = State.DONE;
                     return ProcessStatus.DONE;
                 } else {
                     return ProcessStatus.REFILL;
                 }
+
         }
 
         return ProcessStatus.ERROR;
@@ -56,13 +46,12 @@ public class FrameBroadcastReader implements Reader {
         if (state != State.DONE) {
             throw new IllegalStateException();
         }
-        return new FrameBroadcast(login, text);
+        return new FrameBroadcast(message.getLogin(), message.getText());
     }
 
     @Override
     public void reset() {
-        state = State.WAITING_LOGIN;
-        login = null;
-        text = null;
+        state = State.WAITING_MESSAGE;
+        message=null;
     }
 }

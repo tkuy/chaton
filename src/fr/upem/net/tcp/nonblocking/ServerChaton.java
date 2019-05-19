@@ -16,10 +16,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import fr.upem.net.tcp.nonblocking.frame.Frame;
-import fr.upem.net.tcp.nonblocking.frame.FrameBroadcast;
-import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
-import fr.upem.net.tcp.nonblocking.frame.FrameReader;
+import fr.upem.net.tcp.nonblocking.frame.*;
 
 public class ServerChaton {
 
@@ -60,14 +57,12 @@ public class ServerChaton {
 					case DONE:
 						Frame frame = (Frame) frameReader.get();
 						frame.accept(this);
-						//FrameBroadcast frameBroadcast = (FrameBroadcast) frame;
-						//System.out.println(frameBroadcast.getLogin());
 						frameReader.reset();
 						break;
 					case REFILL:
 						return;
 					case ERROR:
-						//silentlyClose();
+						silentlyClose();
 						System.out.println("Error in processIn");
 						return;
 				}
@@ -192,7 +187,13 @@ public class ServerChaton {
 		public void visitBroadcastFrame(FrameBroadcast frame) {
 			server.broadcast(frame);
 		}
-	}
+
+        @Override
+        public void visitPrivateMessage(FramePrivateMessage framePrivateMessage) {
+            //server.pseudos.get()
+            //TODO
+        }
+    }
 
     static private int BUFFER_SIZE = 1_024;
     static private Logger logger = Logger.getLogger(ServerChaton.class.getName());
