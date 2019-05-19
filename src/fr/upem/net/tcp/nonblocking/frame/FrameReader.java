@@ -1,6 +1,7 @@
 package fr.upem.net.tcp.nonblocking.frame;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
 
 import fr.upem.net.tcp.nonblocking.IntReader;
 import fr.upem.net.tcp.nonblocking.Reader;
@@ -26,7 +27,7 @@ public class FrameReader implements Reader {
 	private final FrameBroadcastReader frameBroadcastReader;
 	
 	 private final ByteBuffer bbin;
-	 
+	 private final static Logger logger = Logger.getLogger(FrameReader.class.toString());
 	 
 	private Frame result;
 	public FrameReader(ByteBuffer bbin) {
@@ -45,11 +46,9 @@ public class FrameReader implements Reader {
 		case WAITING_OP:
 			if(opCodeReader.process() == ProcessStatus.DONE) {
 				int opCode =(int) opCodeReader.get();
-				System.out.println("opCode= "+opCode);
 				state = State.WAITING_FRAME;
 				if(!updateFrameType(opCode)) {
 					reset();
-					System.out.println("OPCODE ERROR");
 					return ProcessStatus.ERROR;
 				}
 				opCodeReader.reset();
@@ -59,12 +58,12 @@ public class FrameReader implements Reader {
 			}
 			
 		case WAITING_FRAME:
-			System.out.println(currentReader);
 			if(currentReader == null) {
 				return ProcessStatus.ERROR;
 			}
 			if(currentReader.process() == ProcessStatus.DONE) {
 				result = (Frame) currentReader.get();
+				logger.info("Read frame : "+ frameType);
 				state=State.DONE;
 				currentReader.reset();
 				return ProcessStatus.DONE;
@@ -83,7 +82,6 @@ public class FrameReader implements Reader {
 			frameType = FrameType.LOGIN;
 			break;
 		case 3:
-			System.out.println("in case 3");
 			currentReader = this.frameBroadcastReader;
 			frameType = FrameType.BROADCAST;
 			break;

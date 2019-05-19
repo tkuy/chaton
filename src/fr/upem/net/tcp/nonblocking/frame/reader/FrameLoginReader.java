@@ -29,7 +29,6 @@ public class FrameLoginReader implements Reader {
                 System.out.println(status);
                 if (status == ProcessStatus.DONE) {
                     login = (String) stringReader.get();
-                    System.out.println(login);
                     stringReader.reset();
                     state = State.DONE;
                     return ProcessStatus.DONE;

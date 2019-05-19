@@ -40,7 +40,6 @@ public class StringReader implements Reader {
                         state = State.DONE;
                         decoded = StandardCharsets.UTF_8.decode(bb).toString();
                         bb.limit(oldLimit);
-                        System.out.println("DONE String Reader " + decoded);
                         return ProcessStatus.DONE;
                     } else {
                         return ProcessStatus.REFILL;

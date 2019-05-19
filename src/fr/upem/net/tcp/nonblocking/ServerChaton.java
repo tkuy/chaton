@@ -51,9 +51,7 @@ public class ServerChaton {
         	
         	for(;;){
         		
-				Reader.ProcessStatus status = frameReader.process();
-				System.out.println("status="+status);
-				switch (status){
+				switch (frameReader.process()){
 					case DONE:
 						Frame frame = (Frame) frameReader.get();
 						frame.accept(this);
@@ -168,12 +166,15 @@ public class ServerChaton {
 		@Override
 		public void visitLoginFrame(FrameLogin frame) {
 			String login = frame.getLogin();
+			logger.info("Received request to connect for the login : "+ login);
 			FrameLoginResponse frameResponse;
 			if(!server.pseudos.containsKey(login)) {
 				frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_ACCEPTED);
 				server.pseudos.put(login, this);
+				logger.info("Connection accepted");
 			} else {
 				frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_REFUSED);
+                logger.info("Connection refused");
 			}
 			queueFrame(frameResponse);
 		}

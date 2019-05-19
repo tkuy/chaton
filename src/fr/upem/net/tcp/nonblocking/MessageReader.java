@@ -61,26 +61,4 @@ public class MessageReader implements Reader {
         login = null;
         text = null;
     }
-
-    public static void main(String[] args) {
-        var utf8 = Charset.forName("UTF-8");
-        var bb = ByteBuffer.allocate(1_024);
-        var login = utf8.encode("coline");
-        var content = utf8.encode("cc");
-        bb.putInt(login.remaining()).put(login).putInt(content.remaining()).put(content)
-                .putInt(login.flip().remaining()).put(utf8.encode("co"));
-        var messageReader = new MessageReader(bb);
-        System.out.println("test : " + bb.position());
-        System.out.println("status : " + messageReader.process());
-        var message = (Message) messageReader.get();
-        System.out.println(message.getLogin() + " : " + message.getText() + "\n");
-        messageReader.reset();
-
-        System.out.println("=======");
-        System.out.println("status : " + messageReader.process());
-        bb.put(utf8.encode("line")).putInt(utf8.encode("test").remaining()).put(utf8.encode("test"));
-        System.out.println("status : " + messageReader.process());
-        message = (Message) messageReader.get();
-        System.out.println(message.getLogin() + " :: " + message.getText() + "\n");
-    }
 }
