@@ -1,8 +1,6 @@
 package fr.upem.net.tcp.nonblocking;
 
-import fr.upem.net.tcp.nonblocking.frame.FrameBroadcast;
-import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
-import fr.upem.net.tcp.nonblocking.frame.FramePrivateMessage;
+import fr.upem.net.tcp.nonblocking.frame.*;
 
 public interface FrameVisitor {
     public void visitLoginFrame(FrameLogin frame);
@@ -10,5 +8,8 @@ public interface FrameVisitor {
 
     public void visitBroadcastFrame(FrameBroadcast frame);
 
-    void visitPrivateMessage(FramePrivateMessage framePrivateMessage);
+    void visitPrivateMessage(FramePrivateMessage frame);
+    void visitPrivateConnection(FramePrivateConnection frame);
+
+    void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame);
 }

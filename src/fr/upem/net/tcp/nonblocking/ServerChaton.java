@@ -129,6 +129,7 @@ public class ServerChaton {
         private void processOut() {
         	while (!queue.isEmpty()) {
 				Frame frame = queue.element();
+				System.out.println("Send with opCode : "+frame.getOpCode());
 				ByteBuffer bb = frame.toByteBuffer();
 				if(bbout.remaining() >= bb.limit()) {
 					bbout.put(bb);
@@ -237,17 +238,36 @@ public class ServerChaton {
 		}
 
         @Override
-        public void visitPrivateMessage(FramePrivateMessage framePrivateMessage) {
-			if(framePrivateMessage.getSender().equals(login)) {
-				Context targetCtx = server.pseudos.get(framePrivateMessage.getTarget());
-				targetCtx.queueFrame(framePrivateMessage);
+        public void visitPrivateMessage(FramePrivateMessage frame) {
+			if(frame.getSender().equals(login)) {
+				Context targetCtx = server.pseudos.get(frame.getTarget());
+				if(targetCtx!=null) {
+					targetCtx.queueFrame(frame);
+				}
 			}
 		}
-    }
+
+		@Override
+		public void visitPrivateConnection(FramePrivateConnection frame) {
+			if(frame.getRequester().equals(login)) {
+				Context targetCtx = server.pseudos.get(frame.getTarget());
+				if(targetCtx!=null) {
+					targetCtx.queueFrame(frame);
+					server.requests.put(frame.getRequester(), frame.getTarget());
+				}
+			}
+		}
+
+		@Override
+		public void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame) {
+
+		}
+	}
 
     static private int BUFFER_SIZE = 1_024;
     static private Logger logger = Logger.getLogger(ServerChaton.class.getName());
 	private final Map<String, Context> pseudos = new HashMap<>();
+	private final Map<String, String> requests = new HashMap<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
 

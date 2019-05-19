@@ -1,18 +1,17 @@
 package fr.upem.net.tcp.nonblocking.frame;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import fr.upem.net.tcp.nonblocking.IntReader;
 import fr.upem.net.tcp.nonblocking.Reader;
-import fr.upem.net.tcp.nonblocking.frame.reader.FrameBroadcastReader;
-import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
-import fr.upem.net.tcp.nonblocking.frame.reader.FramePrivateMessageReader;
+import fr.upem.net.tcp.nonblocking.frame.reader.*;
 
 public class FrameReader implements Reader {
 
 	private enum FrameType{
-		BROADCAST, PRIVATE_MESSAGE, NONE
+		BROADCAST, PRIVATE_MESSAGE, PRIVATE_CONNECTION, PRIVATE_CONNECTION_RESPONSE, NONE
 	}
 	private enum State{
 		DONE,WAITING_OP,WAITING_FRAME,ERROR
@@ -23,9 +22,12 @@ public class FrameReader implements Reader {
 	private final IntReader opCodeReader;
 	private FrameType frameType;
 	private Reader currentReader;
-	
+	private Optional<Integer> currentOpCode = Optional.empty();
+
 	private final FrameBroadcastReader frameBroadcastReader;
 	private final FramePrivateMessageReader privateMessageReader;
+	private final FramePrivateConnectionReader privateConnectionReader;
+	private final FramePrivateConnectionResponseReader privateConnectionResponseReader;
 	
 	 private final ByteBuffer bbin;
 	 private final static Logger logger = Logger.getLogger(FrameReader.class.toString());
@@ -37,6 +39,8 @@ public class FrameReader implements Reader {
 		this.opCodeReader = new IntReader(bbin);
 		this.frameBroadcastReader = new FrameBroadcastReader(bbin);
 		this.privateMessageReader = new FramePrivateMessageReader(bbin);
+		this.privateConnectionReader = new FramePrivateConnectionReader(bbin);
+		this.privateConnectionResponseReader = new FramePrivateConnectionResponseReader(bbin);
 	}
 
 	@Override
@@ -85,6 +89,18 @@ public class FrameReader implements Reader {
 				currentReader = this.privateMessageReader;
 				frameType = FrameType.PRIVATE_MESSAGE;
 				break;
+			case 5:
+				currentReader = this.privateConnectionReader;
+				frameType = FrameType.PRIVATE_CONNECTION;
+				break;
+			case 6:
+				currentReader = this.privateConnectionResponseReader;
+				this.privateConnectionResponseReader.setResponse(FramePrivateConnectionResponse.OK_PRIVATE);
+				frameType = FrameType.PRIVATE_CONNECTION_RESPONSE;
+			case 7:
+				currentReader = this.privateConnectionResponseReader;
+				this.privateConnectionResponseReader.setResponse(FramePrivateConnectionResponse.KO_PRIVATE);
+				frameType = FrameType.PRIVATE_CONNECTION_RESPONSE;
 			default:
 				frameType = FrameType.NONE;
 				return false;

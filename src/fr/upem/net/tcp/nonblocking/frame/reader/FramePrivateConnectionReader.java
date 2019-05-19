@@ -2,21 +2,19 @@ package fr.upem.net.tcp.nonblocking.frame.reader;
 
 import fr.upem.net.tcp.nonblocking.Reader;
 import fr.upem.net.tcp.nonblocking.StringReader;
-import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
-import fr.upem.net.tcp.nonblocking.frame.FrameReader;
+import fr.upem.net.tcp.nonblocking.frame.FramePrivateConnection;
 
 import java.nio.ByteBuffer;
 
-public class FramePrivateMessageReader implements Reader {
-    private enum State {DONE, WAITING_SENDER, WAITING_TARGET, WAITING_CONTENT, ERROR}
+public class FramePrivateConnectionReader implements Reader{
+    private enum State {DONE, WAITING_SENDER, WAITING_TARGET, ERROR}
 
     private State state = State.WAITING_SENDER;
-    private String sender;
+    private String requester;
     private String target;
-    private String content;
     private StringReader stringReader;
-    //MESSAGE_PRIVATE(4) = 4 (OPCODE) login_sender (STRING) login_target (STRING) msg (STRING)
-    public FramePrivateMessageReader(ByteBuffer bb) {
+    //REQUEST_PRIVATE(5) = 5 (OPCODE) login_requester (STRING) login_target (STRING)
+    public FramePrivateConnectionReader(ByteBuffer bb) {
         this.stringReader = new StringReader(bb);
     }
 
@@ -28,21 +26,13 @@ public class FramePrivateMessageReader implements Reader {
         switch (state) {
             case WAITING_SENDER:
                 if (stringReader.process() == ProcessStatus.DONE) {
-                    sender = (String) stringReader.get();
+                    requester = (String) stringReader.get();
                     stringReader.reset();
                     state = State.WAITING_TARGET;
                 } else {
                     return ProcessStatus.REFILL;
                 }
             case WAITING_TARGET:
-                if (stringReader.process() == ProcessStatus.DONE) {
-                    target = (String) stringReader.get();
-                    stringReader.reset();
-                    state = State.WAITING_CONTENT;
-                } else {
-                    return ProcessStatus.REFILL;
-                }
-            case WAITING_CONTENT:
                 if (stringReader.process() == ProcessStatus.DONE) {
                     target = (String) stringReader.get();
                     stringReader.reset();
@@ -60,12 +50,13 @@ public class FramePrivateMessageReader implements Reader {
         if (state != State.DONE) {
             throw new IllegalStateException();
         }
-        return null;
+        return new FramePrivateConnection(requester, target);
     }
 
     @Override
     public void reset() {
         state = State.WAITING_SENDER;
-        sender = null;
+        requester = null;
+        target=null;
     }
 }

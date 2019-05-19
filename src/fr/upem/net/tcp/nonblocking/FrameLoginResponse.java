@@ -23,7 +23,7 @@ public class FrameLoginResponse implements Frame {
 
     @Override
     public int getOpCode() {
-        return 0;
+        return response;
     }
 
     @Override

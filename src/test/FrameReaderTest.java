@@ -1,9 +1,11 @@
 package test;
 
 import fr.upem.net.tcp.nonblocking.Reader;
+import fr.upem.net.tcp.nonblocking.frame.FramePrivateConnection;
 import fr.upem.net.tcp.nonblocking.frame.FramePrivateMessage;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameBroadcastReader;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
+import fr.upem.net.tcp.nonblocking.frame.reader.FramePrivateConnectionReader;
 import fr.upem.net.tcp.nonblocking.frame.reader.FramePrivateMessageReader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -73,6 +75,26 @@ public class FrameReaderTest {
         ByteBuffer message = UTF8.encode("The message");
         bbin.putInt(message.remaining()).put(message);
         status = framePrivateMessageReader.process();
+        assertEquals(Reader.ProcessStatus.DONE, status);
+    }
+
+    @Test
+    public void privateConnectionReader() {
+        ByteBuffer bbin = ByteBuffer.allocate(256);
+        FramePrivateConnectionReader framePrivateConnectionReader = new FramePrivateConnectionReader(bbin);
+        Reader.ProcessStatus status = framePrivateConnectionReader.process();
+        assertEquals(status, Reader.ProcessStatus.REFILL);
+        ByteBuffer login = UTF8.encode("sender");
+        bbin.putInt(login.remaining());
+        status = framePrivateConnectionReader.process();
+        assertEquals(status, Reader.ProcessStatus.REFILL);
+        bbin.put(login);
+        status = framePrivateConnectionReader.process();
+        assertEquals(Reader.ProcessStatus.REFILL, status);
+
+        ByteBuffer target = UTF8.encode("The_target");
+        bbin.putInt(target.remaining()).put(target);
+        status = framePrivateConnectionReader.process();
         assertEquals(Reader.ProcessStatus.DONE, status);
     }
 }
