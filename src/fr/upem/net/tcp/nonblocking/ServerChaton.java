@@ -130,8 +130,8 @@ public class ServerChaton {
 							case DONE:
 								Frame frame = (Frame) frameLoginPrivateConnectionReader.get();
 								frame.accept(this);
-								frameLoginReader.reset();
-								logger.info("Started a private connection "+ login);
+								frameLoginPrivateConnectionReader.reset();
+								logger.info("Started a private connection ");
 								processIn();
 							case REFILL:
 								return;
@@ -318,6 +318,8 @@ public class ServerChaton {
 		@Override
 		public void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame) {
             ArrayList<String> targets = server.requests.get(frame.getRequester());
+            System.out.println(targets);
+            System.out.println("visitPrivateConnectionResponse");
             //If the requester has made a request and
             if(targets!= null && targets.contains(frame.getTarget())) {
                 if(frame.getOpCode() == FramePrivateConnectionResponse.OK_PRIVATE) {
@@ -325,7 +327,9 @@ public class ServerChaton {
                     server.ids.add(id);
                     FrameIdPrivateConnectionResponse frameIdPrivateConnectionResponse = new FrameIdPrivateConnectionResponse(frame.getRequester(), frame.getTarget(), id);
                     this.queueFrame(frameIdPrivateConnectionResponse);
-                    server.pseudos.get(frame.getRequester()).queueFrame(frame);
+                    System.out.println(server.pseudos.get(frame.getRequester()) + frame.getRequester());
+                    server.pseudos.get(frame.getRequester()).queueFrame(frameIdPrivateConnectionResponse);
+                    server.connectionsId.put(id, new Pair());
                 }
                 targets.remove(frame.getTarget());
                 if(targets.isEmpty()) {
