@@ -608,7 +608,7 @@ public class ServerChaton {
     private void broadcast(Frame frame) {
 		for (SelectionKey key : selector.keys()) {
 			Object attachment = key.attachment();
-			if(attachment!=null) {
+			if(attachment!=null && attachment instanceof Context) {
 				Context ctx = (Context) key.attachment();
 				ctx.queueFrame(frame);
 			}
