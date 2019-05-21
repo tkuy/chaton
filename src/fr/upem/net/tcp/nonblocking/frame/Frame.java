@@ -6,5 +6,4 @@ public interface Frame {
 	public int getOpCode();
 	public void accept(FrameVisitor visitor);
 	public ByteBuffer toByteBuffer();
-	public void accept(FramePrivateVisitor visitor);
 }

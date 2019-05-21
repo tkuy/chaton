@@ -48,10 +48,4 @@ public class FramePrivateConnectionResponse implements Frame {
         bb.putInt(opCode).putInt(requester.remaining()).put(requester).putInt(target.remaining()).put(target);
         return bb;
     }
-
-	@Override
-	public void accept(FramePrivateVisitor visitor) {
-		// TODO Auto-generated method stub
-		
-	}
 }

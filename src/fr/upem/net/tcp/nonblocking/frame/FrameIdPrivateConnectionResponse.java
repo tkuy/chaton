@@ -24,7 +24,7 @@ public class FrameIdPrivateConnectionResponse implements Frame {
 
     @Override
     public void accept(FrameVisitor visitor) {
-        //TODO
+        //Do nothing
     }
 
     @Override
@@ -35,10 +35,5 @@ public class FrameIdPrivateConnectionResponse implements Frame {
         ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES * 3 + sender.remaining() + target.remaining());
         bb.putInt(OP_CODE).putInt(sender.remaining()).put(sender).putInt(target.remaining()).put(target).putLong(id);
         return bb;
-    }
-
-    @Override
-    public void accept(FramePrivateVisitor visitor) {
-        //TODO
     }
 }

@@ -42,9 +42,4 @@ public class FramePrivateConnection implements Frame {
         bb.putInt(OP_CODE).putInt(sender.remaining()).put(sender).putInt(target.remaining()).put(target);
         return bb;
     }
-
-    @Override
-    public void accept(FramePrivateVisitor visitor) {
-        //TODO
-    }
 }

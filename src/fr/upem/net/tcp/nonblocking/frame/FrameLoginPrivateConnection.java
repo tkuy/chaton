@@ -2,7 +2,7 @@ package fr.upem.net.tcp.nonblocking.frame;
 
 import java.nio.ByteBuffer;
 
-public class FrameLoginPrivateConnection implements Frame {
+public class FrameLoginPrivateConnection implements FramePrivate {
     private static final int OP_CODE = 9;
     @Override
     public int getOpCode() {
@@ -10,17 +10,12 @@ public class FrameLoginPrivateConnection implements Frame {
     }
 
     @Override
-    public void accept(FrameVisitor visitor) {
-        //TODO
+    public void accept(FramePrivateVisitor visitor) {
+
     }
 
     @Override
     public ByteBuffer toByteBuffer() {
         return null;
-    }
-
-    @Override
-    public void accept(FramePrivateVisitor visitor) {
-
     }
 }
