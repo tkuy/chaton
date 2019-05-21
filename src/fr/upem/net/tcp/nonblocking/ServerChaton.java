@@ -274,17 +274,17 @@ public class ServerChaton {
             //If the requester has made a request and
             if(targets!= null && targets.contains(frame.getTarget())) {
                 if(frame.getOpCode() == FramePrivateConnectionResponse.OK_PRIVATE) {
-                    //Creation of context
-
-                } else if(frame.getOpCode() == FramePrivateConnectionResponse.KO_PRIVATE){
-
+                    long id = new Random().nextLong();
+                    server.ids.add(id);
+                    FrameIdPrivateConnectionResponse frameIdPrivateConnectionResponse = new FrameIdPrivateConnectionResponse(frame.getRequester(), frame.getTarget(), id);
+                    this.queueFrame(frameIdPrivateConnectionResponse);
+                    server.pseudos.get(frame.getRequester()).queueFrame(frame);
                 }
                 targets.remove(frame.getTarget());
                 if(targets.isEmpty()) {
                     server.requests.remove(frame.getRequester());
                 }
             }
-
 		}
 	}
 
@@ -450,11 +450,19 @@ public class ServerChaton {
         }
 	}
 
+	/*private static class PairContext {
+        private Context ctx1;
+        private Context ctx2;
+
+
+    }*/
+
     static private int BUFFER_SIZE = 1_024;
     static private Logger logger = Logger.getLogger(ServerChaton.class.getName());
 	private final Map<String, Context> pseudos = new HashMap<>();
 	private final Map<String, ArrayList<String>> requests = new HashMap<>();
-	private final Map<Long, Boolean> ids = new HashMap<>();
+	//private final Map<Long, Context> ids = new HashMap<>();
+    private final ArrayList<Long> ids = new ArrayList<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
 
