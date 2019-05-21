@@ -1,4 +1,4 @@
-package fr.upem.net.tcp.nonblocking;
+package fr.upem.net.tcp.nonblocking.frame;
 
 import fr.upem.net.tcp.nonblocking.frame.*;
 

@@ -1,7 +1,5 @@
 package fr.upem.net.tcp.nonblocking.frame;
 
-import fr.upem.net.tcp.nonblocking.FrameVisitor;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -43,5 +41,10 @@ public class FramePrivateConnection implements Frame {
         ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES * 3 + sender.remaining() + target.remaining());
         bb.putInt(OP_CODE).putInt(sender.remaining()).put(sender).putInt(target.remaining()).put(target);
         return bb;
+    }
+
+    @Override
+    public void accept(FramePrivateVisitor visitor) {
+        //TODO
     }
 }

@@ -27,8 +27,9 @@ public class FrameReader implements Reader {
 	private final FrameBroadcastReader frameBroadcastReader;
 	private final FramePrivateMessageReader privateMessageReader;
 	private final FramePrivateConnectionReader privateConnectionReader;
-	private final FramePrivateConnectionResponseReader privateConnectionResponseReader;
-	
+	private final FrameOKPrivateConnectionResponseReader privateOKConnectionResponseReader;
+	private final FrameKOPrivateConnectionResponseReader privateKOConnectionResponseReader;
+
 	 private final ByteBuffer bbin;
 	 private final static Logger logger = Logger.getLogger(FrameReader.class.toString());
 	 
@@ -40,7 +41,8 @@ public class FrameReader implements Reader {
 		this.frameBroadcastReader = new FrameBroadcastReader(bbin);
 		this.privateMessageReader = new FramePrivateMessageReader(bbin);
 		this.privateConnectionReader = new FramePrivateConnectionReader(bbin);
-		this.privateConnectionResponseReader = new FramePrivateConnectionResponseReader(bbin);
+		this.privateOKConnectionResponseReader = new FrameOKPrivateConnectionResponseReader(bbin);
+		this.privateKOConnectionResponseReader = new FrameKOPrivateConnectionResponseReader(bbin);
 	}
 
 	@Override
@@ -96,12 +98,10 @@ public class FrameReader implements Reader {
 				frameType = FrameType.PRIVATE_CONNECTION;
 				break;
 			case 6:
-				currentReader = this.privateConnectionResponseReader;
-				this.privateConnectionResponseReader.setResponse(FramePrivateConnectionResponse.OK_PRIVATE);
+				currentReader = this.privateOKConnectionResponseReader;
 				frameType = FrameType.PRIVATE_CONNECTION_RESPONSE;
 			case 7:
-				currentReader = this.privateConnectionResponseReader;
-				this.privateConnectionResponseReader.setResponse(FramePrivateConnectionResponse.KO_PRIVATE);
+				currentReader = this.privateOKConnectionResponseReader;
 				frameType = FrameType.PRIVATE_CONNECTION_RESPONSE;
 			default:
 				frameType = FrameType.NONE;

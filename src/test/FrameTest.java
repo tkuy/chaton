@@ -1,12 +1,10 @@
 package test;
 
-import fr.upem.net.tcp.nonblocking.FrameLoginResponse;
+import fr.upem.net.tcp.nonblocking.frame.FrameLoginResponse;
 import fr.upem.net.tcp.nonblocking.Message;
 import fr.upem.net.tcp.nonblocking.MessageReader;
 import fr.upem.net.tcp.nonblocking.frame.FrameBroadcast;
 import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
-import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;

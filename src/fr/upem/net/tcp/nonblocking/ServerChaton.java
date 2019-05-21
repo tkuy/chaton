@@ -260,7 +260,8 @@ public class ServerChaton {
 			Context targetCtx = server.pseudos.get(frame.getTarget());
 			if(frame.getRequester().equals(login) && targetCtx!=null) {
 				targetCtx.queueFrame(frame);
-				server.requests.put(frame.getRequester(), frame.getTarget());
+                ArrayList<String> targets = server.requests.computeIfAbsent(frame.getRequester(), k -> new ArrayList());
+                targets.add(frame.getTarget());
 				logger.info("Private connection request from "+frame.getRequester() + " to "+ frame.getTarget());
 			} else {
 				logger.info("Private connection request from "+frame.getRequester() + " to "+ frame.getTarget() + "failed");
@@ -269,21 +270,191 @@ public class ServerChaton {
 
 		@Override
 		public void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame) {
-			if(frame.getOpCode() == FramePrivateConnectionResponse.OK_PRIVATE) {
-				//Creation of context
+            ArrayList<String> targets = server.requests.get(frame.getRequester());
+            //If the requester has made a request and
+            if(targets!= null && targets.contains(frame.getTarget())) {
+                if(frame.getOpCode() == FramePrivateConnectionResponse.OK_PRIVATE) {
+                    //Creation of context
 
-			} else if(frame.getOpCode() == FramePrivateConnectionResponse.KO_PRIVATE){
+                } else if(frame.getOpCode() == FramePrivateConnectionResponse.KO_PRIVATE){
 
-			}
-			server.requests.remove(frame.getRequester(), frame.getTarget());
+                }
+                targets.remove(frame.getTarget());
+                if(targets.isEmpty()) {
+                    server.requests.remove(frame.getRequester());
+                }
+            }
 
 		}
+	}
+
+	static private class PrivateContext implements FramePrivateVisitor{
+		final private SelectionKey key;
+		final private SocketChannel sc;
+		final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
+		final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
+		final private Queue<Frame> queue = new LinkedList<>();
+		final private ServerChaton server;
+		private boolean closed = false;
+		private String login;
+		private Context.State state;
+
+
+		private static Charset UTF8 = StandardCharsets.UTF_8;
+		private FrameReader frameReader = new FrameReader(bbin);
+		private FrameLoginReader frameLoginReader = new FrameLoginReader(bbin);
+		private IntReader opLoginReader = new IntReader(bbin);
+		private PrivateContext(ServerChaton server, SelectionKey key){
+			this.key = key;
+			this.sc = (SocketChannel) key.channel();
+			this.server = server;
+			this.state = Context.State.WAITING_OP;
+		}
+
+        private enum State {
+			WAITING_OP, WAITING_FRAME_LOGIN, AUTHENTICATED
+		}
+
+		/**
+		 * Process the content of bbin
+		 *
+		 * The convention is that bbin is in write-mode before the call
+		 * to process and after the call
+		 *
+		 */
+		private void processIn() {
+			for(;;){
+				switch (state) {
+					case WAITING_OP:
+						//Waiting OP = 0 to start the connection
+						switch (opLoginReader.process()) {
+							case DONE:
+								int op = (int) opLoginReader.get();
+								if (op == 0) {
+									System.out.println("GET OP 0");
+									this.state = Context.State.WAITING_FRAME_LOGIN;
+									opLoginReader.reset();
+									processIn();
+								}
+							case REFILL:
+								return;
+							case ERROR:
+								silentlyClose();
+								return;
+						}
+				}
+			}
+		}
+
+		/**
+		 * Add a message to the message queue, tries to fill bbOut and updateInterestOps
+		 *
+		 * @param frame
+		 */
+		private void queueFrame(Frame frame) {
+			logger.info("Type of frame : "+frame.getOpCode() + " from "+login);
+			queue.add(frame);
+			processOut();
+			updateInterestOps();
+		}
+
+		/**
+		 * Try to fill bbout from the message queue
+		 *
+		 */
+		private void processOut() {
+			while (!queue.isEmpty()) {
+				Frame frame = queue.element();
+				System.out.println("Send with opCode : "+frame.getOpCode());
+				ByteBuffer bb = frame.toByteBuffer();
+				bb.flip();
+				if(bbout.remaining() >= bb.limit()) {
+					bbout.put(bb);
+					queue.poll();
+				} else {
+					bb.compact();
+					return;
+				}
+			}
+		}
+
+		/**
+		 * Update the interestOps of the key looking
+		 * only at values of the boolean closed and
+		 * of both ByteBuffers.
+		 *
+		 * The convention is that both buffers are in write-mode before the call
+		 * to updateInterestOps and after the call.
+		 * Also it is assumed that process has been be called just
+		 * before updateInterestOps.
+		 */
+
+		private void updateInterestOps() {
+			int interestOps = 0;
+			if(!closed && bbin.hasRemaining()) {
+				interestOps |= SelectionKey.OP_READ;
+			}
+			if(bbout.position()!=0) {
+				interestOps |= SelectionKey.OP_WRITE;
+			}
+			if(interestOps == 0) {
+				silentlyClose();
+			} else {
+				key.interestOps(interestOps);
+			}
+		}
+
+		private void silentlyClose() {
+			try {
+				sc.close();
+			} catch (IOException e) {
+				// ignore exception
+			}
+		}
+
+		/**
+		 * Performs the read action on sc
+		 *
+		 * The convention is that both buffers are in write-mode before the call
+		 * to doRead and after the call
+		 *
+		 * @throws IOException
+		 */
+		private void doRead() throws IOException {
+
+			if(sc.read(bbin) == -1) {
+				closed = true;
+			}
+			processIn();
+			updateInterestOps();
+		}
+
+		/**
+		 * Performs the write action on sc
+		 *
+		 * The convention is that both buffers are in write-mode before the call
+		 * to doWrite and after the call
+		 *
+		 * @throws IOException
+		 */
+
+		private void doWrite() throws IOException {
+			sc.write(bbout.flip());
+			bbout.compact();
+			processOut();
+			updateInterestOps();
+		}
+        @Override
+        public void visit(FrameLoginPrivateConnection frame) {
+
+        }
 	}
 
     static private int BUFFER_SIZE = 1_024;
     static private Logger logger = Logger.getLogger(ServerChaton.class.getName());
 	private final Map<String, Context> pseudos = new HashMap<>();
-	private final Map<String, String> requests = new HashMap<>();
+	private final Map<String, ArrayList<String>> requests = new HashMap<>();
+	private final Map<Long, Boolean> ids = new HashMap<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
 
@@ -363,7 +534,6 @@ public class ServerChaton {
 				ctx.queueFrame(frame);
 			}
 		}
-
     }
 
     public static void main(String[] args) throws NumberFormatException, IOException {

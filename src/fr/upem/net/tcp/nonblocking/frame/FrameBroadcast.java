@@ -1,7 +1,5 @@
 package fr.upem.net.tcp.nonblocking.frame;
 
-import fr.upem.net.tcp.nonblocking.FrameVisitor;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
