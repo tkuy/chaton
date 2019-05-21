@@ -98,11 +98,14 @@ public class FrameReader implements Reader {
 				frameType = FrameType.PRIVATE_CONNECTION;
 				break;
 			case 6:
+				System.out.println("received 6");
 				currentReader = this.privateOKConnectionResponseReader;
 				frameType = FrameType.PRIVATE_CONNECTION_RESPONSE;
+				break;
 			case 7:
-				currentReader = this.privateOKConnectionResponseReader;
+				currentReader = this.privateKOConnectionResponseReader;
 				frameType = FrameType.PRIVATE_CONNECTION_RESPONSE;
+				break;
 			default:
 				frameType = FrameType.NONE;
 				return false;
