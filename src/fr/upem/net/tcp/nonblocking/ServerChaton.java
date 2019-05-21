@@ -567,10 +567,22 @@ public class ServerChaton {
 		}
 		try {
 			if (key.isValid() && key.isWritable()) {
-				((Context) key.attachment()).doWrite();
+				//((Context) key.attachment()).doWrite();
+				
+				var tmp = key.attachment();
+				if(tmp instanceof Context) {
+					((Context) tmp).doWrite();
+				}else if(tmp instanceof PrivateContext){
+					((PrivateContext) tmp).doWrite();
+				}
 			}
 			if (key.isValid() && key.isReadable()) {
-				((Context) key.attachment()).doRead();
+				var tmp = key.attachment();
+				if(tmp instanceof Context) {
+					((Context) tmp).doRead();
+				}else if(tmp instanceof PrivateContext){
+					((PrivateContext) tmp).doRead();
+				}
 			}
 		} catch (IOException e) {
 			logger.log(Level.INFO,"Connection closed with client due to IOException",e);
