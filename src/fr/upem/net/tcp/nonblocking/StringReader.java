@@ -1,5 +1,7 @@
 package fr.upem.net.tcp.nonblocking;
 
+import fr.upem.net.tcp.nonblocking.frame.reader.IntReader;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 

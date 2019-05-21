@@ -1,6 +1,5 @@
 package fr.upem.net.tcp.nonblocking.frame.reader;
 
-import fr.upem.net.tcp.nonblocking.MessageReader;
 import fr.upem.net.tcp.nonblocking.Reader;
 import fr.upem.net.tcp.nonblocking.StringReader;
 import fr.upem.net.tcp.nonblocking.frame.FrameLogin;

@@ -1,5 +1,7 @@
 package fr.upem.net.tcp.nonblocking;
 
+import fr.upem.net.tcp.nonblocking.frame.reader.IntReader;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -144,7 +146,7 @@ public class ClientChaton {
     }
 
     static private int BUFFER_SIZE = 1_024;
-    static private Logger logger = Logger.getLogger(ClientChatInt.class.getName());
+    static private Logger logger = Logger.getLogger(ClientChaton.class.getName());
 
     private final SocketChannel sc;
     //private final SocketChannel sc2;

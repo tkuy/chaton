@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-import fr.upem.net.tcp.nonblocking.IntReader;
+import fr.upem.net.tcp.nonblocking.frame.reader.IntReader;
 import fr.upem.net.tcp.nonblocking.Reader;
 import fr.upem.net.tcp.nonblocking.frame.reader.*;
 

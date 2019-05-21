@@ -1,4 +1,8 @@
-package fr.upem.net.tcp.nonblocking;
+package fr.upem.net.tcp.nonblocking.frame.reader;
+
+import fr.upem.net.tcp.nonblocking.Message;
+import fr.upem.net.tcp.nonblocking.Reader;
+import fr.upem.net.tcp.nonblocking.StringReader;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;

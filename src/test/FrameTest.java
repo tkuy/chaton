@@ -2,7 +2,7 @@ package test;
 
 import fr.upem.net.tcp.nonblocking.frame.FrameLoginResponse;
 import fr.upem.net.tcp.nonblocking.Message;
-import fr.upem.net.tcp.nonblocking.MessageReader;
+import fr.upem.net.tcp.nonblocking.frame.reader.MessageReader;
 import fr.upem.net.tcp.nonblocking.frame.FrameBroadcast;
 import fr.upem.net.tcp.nonblocking.frame.FrameLogin;
 import org.junit.jupiter.api.Test;

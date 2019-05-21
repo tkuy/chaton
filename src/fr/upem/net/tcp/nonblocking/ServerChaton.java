@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import fr.upem.net.tcp.nonblocking.frame.*;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginPrivateConnectionReader;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
+import fr.upem.net.tcp.nonblocking.frame.reader.IntReader;
 
 public class ServerChaton {
 
