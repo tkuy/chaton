@@ -223,6 +223,10 @@ public class ServerChaton {
 
         private void silentlyClose() {
             try {
+                logger.info("Remove login from the map : "+login);
+                if(login!=null) {
+                    server.pseudos.remove(login);
+                }
                 sc.close();
             } catch (IOException e) {
                 // ignore exception
@@ -487,9 +491,6 @@ public class ServerChaton {
 		private void silentlyClose() {
 			try {
 				sc.close();
-				if(login!=null) {
-					server.pseudos.remove(login);
-				}
 			} catch (IOException e) {
 				// ignore exception
 			}
