@@ -351,8 +351,8 @@ public class ServerChaton {
 				server.connectionsId.remove(frame.getId());
 				server.connections.put(pair.getCtx1().get().sc, pair.getCtx2().get());
 				server.connections.put(pair.getCtx2().get().sc, pair.getCtx1().get());
-				pair.getCtx1().get().queueFrame(new FramePrivateEstablished());
-				pair.getCtx2().get().queueFrame(new FramePrivateEstablished());
+				pair.getCtx1().get().queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
+				pair.getCtx2().get().queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
 				logger.info("Connection Established");
 			} else {
 				throw new IllegalStateException("Connection already established");
@@ -360,12 +360,12 @@ public class ServerChaton {
 		}
 	}
 
-	static private class PrivateContext implements FramePrivateVisitor{
+	static private class PrivateContext {
 		final private SelectionKey key;
 		final private SocketChannel sc;
 		final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
 		final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
-		final private Queue<Frame> queue = new LinkedList<>();
+		final private Queue<ByteBuffer> queue = new LinkedList<>();
 		final private ServerChaton server;
 		private boolean closed = false;
 		private String login;
@@ -373,19 +373,12 @@ public class ServerChaton {
 
 
 		private static Charset UTF8 = StandardCharsets.UTF_8;
-		private FrameReader frameReader = new FrameReader(bbin);
-		private FrameLoginReader frameLoginReader = new FrameLoginReader(bbin);
 		private IntReader opLoginReader = new IntReader(bbin);
 		private PrivateContext(ServerChaton server, SelectionKey key){
 			this.key = key;
 			this.sc = (SocketChannel) key.channel();
 			this.server = server;
 			this.state = Context.State.WAITING_OP;
-		}
-
-		@Override
-		public void visit(FrameLoginPrivateConnection frame) {
-
 		}
 
 		private enum State {
@@ -424,13 +417,13 @@ public class ServerChaton {
 		}
 
 		/**
-		 * Add a message to the message queue, tries to fill bbOut and updateInterestOps
+		 * Add a message to the bytebuffer queue, tries to fill bbOut and updateInterestOps
 		 *
-		 * @param frame
+		 * @param byteBuffer
 		 */
-		private void queueFrame(Frame frame) {
-			logger.info("Type of frame : "+frame.getOpCode() + " from "+login);
-			queue.add(frame);
+		private void queueByteBuffer(ByteBuffer byteBuffer) {
+			logger.info("QueueByteBuffer");
+			queue.add(byteBuffer);
 			processOut();
 			updateInterestOps();
 		}
@@ -441,9 +434,7 @@ public class ServerChaton {
 		 */
 		private void processOut() {
 			while (!queue.isEmpty()) {
-				Frame frame = queue.element();
-				System.out.println("Send with opCode : "+frame.getOpCode());
-				ByteBuffer bb = frame.toByteBuffer();
+				ByteBuffer bb = queue.element();
 				bb.flip();
 				if(bbout.remaining() >= bb.limit()) {
 					bbout.put(bb);
