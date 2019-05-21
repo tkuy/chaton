@@ -345,12 +345,26 @@ public class ServerChaton {
 			if(pair.ctx1.isEmpty()) {
 				pair.ctx1=Optional.of(privateContext);
 				key.attach(privateContext);
+				System.out.println("KEY: "+ this.key);
 			} else if (pair.ctx2.isEmpty()){
-				pair.ctx2=Optional.of(privateContext);
-				key.attach(privateContext);
+				pair.setCtx2(Optional.of(privateContext));
+				this.key.attach(privateContext);
+				System.out.println("KEY: "+ this.key);
 				server.connectionsId.remove(frame.getId());
 				server.connections.put(pair.getCtx1().get().sc, pair.getCtx2().get());
 				server.connections.put(pair.getCtx2().get().sc, pair.getCtx1().get());
+
+				System.out.println(pair.getCtx1().get().sc);
+				System.out.println(pair.getCtx2().get().sc);
+				if(pair.getCtx1().get().sc.equals(pair.getCtx2().get().sc)) {
+					throw new IllegalStateException("SocketChannel identique");
+				}
+                //FIXME: Force en mode bloquant !!!
+				try {
+					sc.write(ByteBuffer.allocate(Integer.BYTES).putInt(10).flip());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 				pair.getCtx1().get().queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
 				pair.getCtx2().get().queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
 				logger.info("Connection Established");
@@ -379,10 +393,6 @@ public class ServerChaton {
 			this.sc = (SocketChannel) key.channel();
 			this.server = server;
 			this.state = Context.State.WAITING_OP;
-		}
-
-		private enum State {
-			WAITING_OP, WAITING_FRAME_LOGIN, AUTHENTICATED
 		}
 
 		/**
@@ -422,7 +432,7 @@ public class ServerChaton {
 		 * @param byteBuffer
 		 */
 		private void queueByteBuffer(ByteBuffer byteBuffer) {
-			logger.info("QueueByteBuffer");
+			logger.info("QueueByteBuffer send to "+this);
 			queue.add(byteBuffer);
 			processOut();
 			updateInterestOps();
@@ -433,6 +443,7 @@ public class ServerChaton {
 		 *
 		 */
 		private void processOut() {
+			System.out.println("ProcessOutPrivate");
 			while (!queue.isEmpty()) {
 				ByteBuffer bb = queue.element();
 				bb.flip();
@@ -475,6 +486,9 @@ public class ServerChaton {
 		private void silentlyClose() {
 			try {
 				sc.close();
+				if(login!=null) {
+					server.pseudos.remove(login);
+				}
 			} catch (IOException e) {
 				// ignore exception
 			}
@@ -565,6 +579,8 @@ public class ServerChaton {
 					((Context) tmp).doWrite();
 				}else if(tmp instanceof PrivateContext){
 					((PrivateContext) tmp).doWrite();
+				} else {
+					throw new IllegalArgumentException("Not a context and private context");
 				}
 			}
 			if (key.isValid() && key.isReadable()) {
@@ -573,6 +589,8 @@ public class ServerChaton {
 					((Context) tmp).doRead();
 				}else if(tmp instanceof PrivateContext){
 					((PrivateContext) tmp).doRead();
+				} else {
+					throw new IllegalArgumentException("Not a context and private context");
 				}
 			}
 		} catch (IOException e) {
