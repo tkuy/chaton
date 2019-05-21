@@ -265,7 +265,7 @@ public class ServerChaton {
 			processOut();
 			updateInterestOps();
         }
-
+		//Connection OP = 1 or 2
 		@Override
 		public void visitLoginFrame(FrameLogin frame) {
 			String login = frame.getLogin();
@@ -282,12 +282,10 @@ public class ServerChaton {
 			}
 			queueFrame(frameResponse);
 		}
-
         @Override
         public void visitResponseLoginFrame(FrameLoginResponse frame) {
             queueFrame(frame);
         }
-
         @Override
 		public void visitBroadcastFrame(FrameBroadcast frame) {
 			if(frame.getSender().equals(login)) {
@@ -306,7 +304,7 @@ public class ServerChaton {
 				logger.info("Private message from "+frame.getSender() + " to "+ frame.getTarget() + "failed");
 			}
 		}
-
+		//OP = 5. Ask for a connection
 		@Override
 		public void visitPrivateConnection(FramePrivateConnection frame) {
 			Context targetCtx = server.pseudos.get(frame.getTarget());
@@ -319,7 +317,8 @@ public class ServerChaton {
 				logger.info("Private connection request from "+frame.getRequester() + " to "+ frame.getTarget() + "failed");
 			}
 		}
-
+		//OP 6 OR 7. Accept or refuse the connection
+		//Case 6  : Send the ID to the requester and target
 		@Override
 		public void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame) {
             ArrayList<String> targets = server.requests.get(frame.getRequester());
@@ -342,7 +341,7 @@ public class ServerChaton {
                 }
             }
 		}
-
+		//OP = 8. Receive the frame with the ID. Migrate from Context to ContextPrivate
 		@Override
 		public void visitLoginPrivateConnection(FrameLoginPrivateConnection frame) {
 			Pair pair = server.connectionsId.get(frame.getId());
@@ -450,6 +449,7 @@ public class ServerChaton {
 		private void processOut() {
 			System.out.println("ProcessOutPrivate");
 			while (!queue.isEmpty()) {
+				//FIXME: Use FillByteBuffer when it works.
 				ByteBuffer bb = queue.element();
 				bb.flip();
 				if(bbout.remaining() >= bb.limit()) {
