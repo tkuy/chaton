@@ -17,10 +17,36 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fr.upem.net.tcp.nonblocking.frame.*;
+import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginPrivateConnectionReader;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
 
 public class ServerChaton {
 
+	static private class Pair {
+		private Optional<PrivateContext> ctx1;
+		private Optional<PrivateContext> ctx2;
+
+		public Pair() {
+			this.ctx1 = Optional.empty();
+			this.ctx2 = Optional.empty();
+		}
+
+		public Optional<PrivateContext> getCtx1() {
+			return ctx1;
+		}
+
+		public void setCtx1(Optional<PrivateContext> ctx1) {
+			this.ctx1 = ctx1;
+		}
+
+		public Optional<PrivateContext> getCtx2() {
+			return ctx2;
+		}
+
+		public void setCtx2(Optional<PrivateContext> ctx2) {
+			this.ctx2 = ctx2;
+		}
+	}
     static private class Context implements FrameVisitor{
 
         final private SelectionKey key;
@@ -38,6 +64,7 @@ public class ServerChaton {
         private FrameReader frameReader = new FrameReader(bbin);
         private FrameLoginReader frameLoginReader = new FrameLoginReader(bbin);
         private IntReader opLoginReader = new IntReader(bbin);
+        private FrameLoginPrivateConnectionReader frameLoginPrivateConnectionReader = new FrameLoginPrivateConnectionReader(bbin);
         private Context(ServerChaton server, SelectionKey key){
             this.key = key;
             this.sc = (SocketChannel) key.channel();
@@ -46,7 +73,7 @@ public class ServerChaton {
         }
 
         private enum State {
-            WAITING_OP, WAITING_FRAME_LOGIN, AUTHENTICATED
+            WAITING_OP, WAITING_FRAME_LOGIN, WAITING_FRAME_PRIVATE_LOGIN, AUTHENTICATED
         }
         
         /**
@@ -69,6 +96,10 @@ public class ServerChaton {
 									this.state = State.WAITING_FRAME_LOGIN;
 									opLoginReader.reset();
 									processIn();
+								} else if(op == 9) {
+									this.state = State.WAITING_FRAME_PRIVATE_LOGIN;
+									opLoginReader.reset();
+									processIn();
 								}
 							case REFILL:
 								return;
@@ -85,6 +116,22 @@ public class ServerChaton {
 								state = State.AUTHENTICATED;
 								frameLoginReader.reset();
 								logger.info("The user is now authenticated as "+ login);
+								processIn();
+							case REFILL:
+								return;
+							case ERROR:
+								silentlyClose();
+								System.out.println("Error in processIn");
+								return;
+						}
+					case WAITING_FRAME_PRIVATE_LOGIN :
+						//Recoit ACCEPT
+						switch (frameLoginPrivateConnectionReader.process()) {
+							case DONE:
+								Frame frame = (Frame) frameLoginPrivateConnectionReader.get();
+								frame.accept(this);
+								frameLoginReader.reset();
+								logger.info("Started a private connection "+ login);
 								processIn();
 							case REFILL:
 								return;
@@ -286,6 +333,27 @@ public class ServerChaton {
                 }
             }
 		}
+
+		@Override
+		public void visitLoginPrivateConnection(FrameLoginPrivateConnection frame) {
+			Pair pair = server.connectionsId.get(frame.getId());
+			PrivateContext privateContext = new PrivateContext(server, key);
+			if(pair.ctx1.isEmpty()) {
+				pair.ctx1=Optional.of(privateContext);
+				key.attach(privateContext);
+			} else if (pair.ctx2.isEmpty()){
+				pair.ctx2=Optional.of(privateContext);
+				key.attach(privateContext);
+				server.connectionsId.remove(frame.getId());
+				server.connections.put(pair.getCtx1().get().sc, pair.getCtx2().get());
+				server.connections.put(pair.getCtx2().get().sc, pair.getCtx1().get());
+				pair.getCtx1().get().queueFrame(new FramePrivateEstablished());
+				pair.getCtx2().get().queueFrame(new FramePrivateEstablished());
+				logger.info("Connection Established");
+			} else {
+				throw new IllegalStateException("Connection already established");
+			}
+		}
 	}
 
 	static private class PrivateContext implements FramePrivateVisitor{
@@ -311,7 +379,12 @@ public class ServerChaton {
 			this.state = Context.State.WAITING_OP;
 		}
 
-        private enum State {
+		@Override
+		public void visit(FrameLoginPrivateConnection frame) {
+
+		}
+
+		private enum State {
 			WAITING_OP, WAITING_FRAME_LOGIN, AUTHENTICATED
 		}
 
@@ -444,27 +517,18 @@ public class ServerChaton {
 			processOut();
 			updateInterestOps();
 		}
-        @Override
-        public void visit(FrameLoginPrivateConnection frame) {
 
-        }
 	}
-
-	/*private static class PairContext {
-        private Context ctx1;
-        private Context ctx2;
-
-
-    }*/
 
     static private int BUFFER_SIZE = 1_024;
     static private Logger logger = Logger.getLogger(ServerChaton.class.getName());
 	private final Map<String, Context> pseudos = new HashMap<>();
 	private final Map<String, ArrayList<String>> requests = new HashMap<>();
-	//private final Map<Long, Context> ids = new HashMap<>();
     private final ArrayList<Long> ids = new ArrayList<>();
     private final ServerSocketChannel serverSocketChannel;
     private final Selector selector;
+    private final Map<Long, Pair> connectionsId = new HashMap<>();
+    private final Map<SocketChannel, PrivateContext> connections = new HashMap<>();
 
     public ServerChaton(int port) throws IOException {
         serverSocketChannel = ServerSocketChannel.open();

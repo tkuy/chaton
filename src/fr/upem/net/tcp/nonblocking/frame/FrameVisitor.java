@@ -12,4 +12,6 @@ public interface FrameVisitor {
     void visitPrivateConnection(FramePrivateConnection frame);
 
     void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame);
+
+    void visitLoginPrivateConnection(FrameLoginPrivateConnection frame);
 }
