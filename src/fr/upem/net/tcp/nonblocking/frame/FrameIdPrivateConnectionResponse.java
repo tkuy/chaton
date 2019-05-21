@@ -32,7 +32,7 @@ public class FrameIdPrivateConnectionResponse implements Frame {
         ByteBuffer sender = UTF8.encode(this.requester);
         ByteBuffer target = UTF8.encode(this.target);
 
-        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES * 3 + sender.remaining() + target.remaining());
+        ByteBuffer bb = ByteBuffer.allocate(Integer.BYTES * 3 + sender.remaining() + target.remaining() + Long.BYTES);
         bb.putInt(OP_CODE).putInt(sender.remaining()).put(sender).putInt(target.remaining()).put(target).putLong(id);
         return bb;
     }
