@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import fr.upem.net.tcp.http.FillByteBuffer;
 import fr.upem.net.tcp.nonblocking.frame.*;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginPrivateConnectionReader;
 import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
@@ -456,7 +457,13 @@ public class ServerChaton {
 					bbout.put(bb);
 					queue.poll();
 				} else {
+					//TODO: Check that it come out on write mode
+					//Not enough space. do not poll.
+					//Write mode
 					bb.compact();
+					FillByteBuffer.fill(bb, bbout);
+					//FillByteBuffer let the bbin bbout on write mode, compact is not useful.
+					//bb.compact();
 					return;
 				}
 			}
