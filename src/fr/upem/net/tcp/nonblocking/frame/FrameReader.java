@@ -11,7 +11,7 @@ import fr.upem.net.tcp.nonblocking.frame.reader.*;
 public class FrameReader implements Reader {
 
 	private enum FrameType{
-		BROADCAST, PRIVATE_MESSAGE, PRIVATE_CONNECTION, PRIVATE_CONNECTION_RESPONSE, NONE
+		BROADCAST, PRIVATE_MESSAGE, PRIVATE_CONNECTION, PRIVATE_CONNECTION_RESPONSE, LOGIN, LOGIN_PRIVATE_CONNECTION, NONE
 	}
 	private enum State{
 		DONE,WAITING_OP,WAITING_FRAME,ERROR
@@ -29,6 +29,8 @@ public class FrameReader implements Reader {
 	private final FramePrivateConnectionReader privateConnectionReader;
 	private final FrameOKPrivateConnectionResponseReader privateOKConnectionResponseReader;
 	private final FrameKOPrivateConnectionResponseReader privateKOConnectionResponseReader;
+	private final FrameLoginReader frameLoginReader;
+	private FrameLoginPrivateConnectionReader privateLoginConnectionReader;
 
 	 private final ByteBuffer bbin;
 	 private final static Logger logger = Logger.getLogger(FrameReader.class.toString());
@@ -43,6 +45,8 @@ public class FrameReader implements Reader {
 		this.privateConnectionReader = new FramePrivateConnectionReader(bbin);
 		this.privateOKConnectionResponseReader = new FrameOKPrivateConnectionResponseReader(bbin);
 		this.privateKOConnectionResponseReader = new FrameKOPrivateConnectionResponseReader(bbin);
+		this.frameLoginReader = new FrameLoginReader(bbin);
+		this.privateLoginConnectionReader = new FrameLoginPrivateConnectionReader(bbin);
 	}
 
 	@Override
@@ -83,13 +87,15 @@ public class FrameReader implements Reader {
 
 	private boolean updateFrameType(int opCode) {
 		switch(opCode) {
+			case 0:
+				currentReader = this.frameLoginReader;
+				frameType = FrameType.LOGIN;
+				break;
 			case 3:
 				currentReader = this.frameBroadcastReader;
 				frameType = FrameType.BROADCAST;
 				break;
 			case 4:
-				
-				System.out.println("here case 4");
 				currentReader = this.privateMessageReader;
 				frameType = FrameType.PRIVATE_MESSAGE;
 				break;
@@ -98,13 +104,16 @@ public class FrameReader implements Reader {
 				frameType = FrameType.PRIVATE_CONNECTION;
 				break;
 			case 6:
-				System.out.println("received 6");
 				currentReader = this.privateOKConnectionResponseReader;
 				frameType = FrameType.PRIVATE_CONNECTION_RESPONSE;
 				break;
 			case 7:
 				currentReader = this.privateKOConnectionResponseReader;
 				frameType = FrameType.PRIVATE_CONNECTION_RESPONSE;
+				break;
+			case 9:
+				currentReader = this.privateLoginConnectionReader;
+				frameType = FrameType.LOGIN_PRIVATE_CONNECTION;
 				break;
 			default:
 				frameType = FrameType.NONE;
