@@ -150,7 +150,7 @@ public class ClientChaton {
     static private Logger logger = Logger.getLogger(ClientChaton.class.getName());
 
     private final SocketChannel sc;
-    //private final SocketChannel sc2;
+    //private final SocketChannel ctx2;
     private final Selector selector;
     private final InetSocketAddress serverAddress;
     private SelectionKey key;
@@ -160,19 +160,19 @@ public class ClientChaton {
     //final private ArrayBlockingQueue<Integer> privateConnection = new ArrayBlockingQueue(10);
     public ClientChaton(int port, String address) throws IOException {
         sc = SocketChannel.open();
-        //sc2 = SocketChannel.open();
+        //ctx2 = SocketChannel.open();
         this.serverAddress = new InetSocketAddress(address, port);
         sc.configureBlocking(false);
-        //sc2.configureBlocking(false);
+        //ctx2.configureBlocking(false);
         selector = Selector.open();
     }
     public void launch() throws IOException {
         sc.configureBlocking(false);
         sc.connect(serverAddress);
-        //sc2.connect(serverAddress);
+        //ctx2.connect(serverAddress);
         //Register
         key=sc.register(selector, SelectionKey.OP_CONNECT);
-        //keyPrivate = sc2.register(selector, SelectionKey.OP_CONNECT);
+        //keyPrivate = ctx2.register(selector, SelectionKey.OP_CONNECT);
         //Context
         Context contextPublic = new Context(key, messages);
         //Context contextPrivate = new Context(keyPrivate, privateMessages);

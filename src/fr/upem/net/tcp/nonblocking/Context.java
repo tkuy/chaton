@@ -7,6 +7,7 @@ import fr.upem.net.tcp.nonblocking.frame.reader.IntReader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
@@ -14,10 +15,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static fr.upem.net.tcp.nonblocking.ServerChaton.*;
+
 class Context implements FrameVisitor {
     static private Logger logger = Logger.getLogger(Context.class.getName());
     static private int BUFFER_SIZE = 1_024;
-    final private SelectionKey key;
+    private SelectionKey key;
     final private SocketChannel sc;
     final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
     final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
@@ -119,7 +122,11 @@ class Context implements FrameVisitor {
      */
 
     private void updateInterestOps() {
+        System.out.println("UPDATE INTERESTOPS");
         int interestOps = 0;
+        /*if(!key.isValid()) {
+            return;
+        }*/
         if(!closed && bbin.hasRemaining()) {
             interestOps |= SelectionKey.OP_READ;
         }
@@ -246,7 +253,7 @@ class Context implements FrameVisitor {
                 this.queueFrame(frameIdPrivateConnectionResponse);
                 System.out.println(server.pseudos.get(frame.getRequester()) + frame.getRequester());
                 server.pseudos.get(frame.getRequester()).queueFrame(frameIdPrivateConnectionResponse);
-                server.connectionsId.put(id, new ServerChaton.Pair());
+                server.connectionsId.put(id, new Pair());
             }
             targets.remove(frame.getTarget());
             if(targets.isEmpty()) {
@@ -254,36 +261,47 @@ class Context implements FrameVisitor {
             }
         }
     }
-    //OP = 8. Receive the frame with the ID. Migrate from Context to ContextPrivate
+    //OP = 9. Receive the frame with the ID. Migrate from Context to ContextPrivate
     @Override
     public void visitLoginPrivateConnection(FrameLoginPrivateConnection frame) {
-        ServerChaton.Pair pair = server.connectionsId.get(frame.getId());
-        PrivateContext privateContext = new PrivateContext(server, key);
-        if(pair.ctx1.isEmpty()) {
-            pair.ctx1=Optional.of(privateContext);
-            key.attach(privateContext);
-            System.out.println("KEY: "+ this.key);
-        } else if (pair.ctx2.isEmpty()){
-            pair.setCtx2(Optional.of(privateContext));
-            this.key.attach(privateContext);
-            System.out.println("KEY: "+ this.key);
+        System.out.println("VisitLoginPrivateConnection");
+        Pair pair = server.connectionsId.get(frame.getId());
+        //PrivateContext privateContext = new PrivateContext(server, key);
+        if(pair.sc1.isEmpty()) {
+            pair.sc1=Optional.of(sc);
+            key.attach(null);
+            System.out.println("Key CANCELLed");
+            key.cancel();
+            System.out.println(key);
+        } else if (pair.sc2.isEmpty()){
+            System.out.println("Deuxieme etape");
             server.connectionsId.remove(frame.getId());
-            server.connections.put(pair.getCtx1().get().sc, pair.getCtx2().get());
-            server.connections.put(pair.getCtx2().get().sc, pair.getCtx1().get());
-
-            System.out.println(pair.getCtx1().get().sc);
-            System.out.println(pair.getCtx2().get().sc);
-            if(pair.getCtx1().get().sc.equals(pair.getCtx2().get().sc)) {
-                throw new IllegalStateException("SocketChannel identique");
-            }
-            //FIXME: Force en mode bloquant !!!
+            //Client 1
+            SelectionKey newKey;
+            PrivateContext client1;
             try {
-                sc.write(ByteBuffer.allocate(Integer.BYTES).putInt(10).flip());
-            } catch (IOException e) {
-                e.printStackTrace();
+                //Register new the new key
+                newKey = pair.sc1.get().register(server.selector, SelectionKey.OP_READ);
+                client1  = new PrivateContext(server, newKey);
+                newKey.attach(client1);
+            } catch (ClosedChannelException e) {
+                return;
             }
-            pair.getCtx1().get().queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
-            pair.getCtx2().get().queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
+            PrivateContext client2 = new PrivateContext(server, this.key);
+
+            //Client 2
+            pair.setSc2(Optional.of(sc));
+            this.key.attach(client2);
+            System.out.println("KEY2: "+ this.key);
+            //Put the context.
+            server.connections.put(pair.sc1.get(), client2);
+            server.connections.put(pair.sc2.get(), client1);
+            //Send the ESTABLISHED frame
+            client1.queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
+            client2.queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
+            client1.updateInterestOps();
+            client2.updateInterestOps();
+
             logger.info("Connection Established");
         } else {
             throw new IllegalStateException("Connection already established");

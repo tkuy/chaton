@@ -36,7 +36,6 @@ class PrivateContext {
         this.server = server;
         this.state = State.WAITING_OP;
     }
-
     /**
      * Process the content of bbin
      *
@@ -129,7 +128,7 @@ class PrivateContext {
      * before updateInterestOps.
      */
 
-    private void updateInterestOps() {
+    void updateInterestOps() {
         int interestOps = 0;
         if(!closed && bbin.hasRemaining()) {
             interestOps |= SelectionKey.OP_READ;

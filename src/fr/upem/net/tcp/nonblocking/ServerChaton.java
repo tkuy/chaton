@@ -3,7 +3,6 @@ package fr.upem.net.tcp.nonblocking;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -19,10 +18,35 @@ import fr.upem.net.tcp.nonblocking.frame.*;
 public class ServerChaton {
 
 	static class Pair {
+		Optional<SocketChannel> sc1;
+		Optional<SocketChannel> sc2;
+
+		public Pair() {
+			this.sc1 = Optional.empty();
+			this.sc2 = Optional.empty();
+		}
+
+		public Optional<SocketChannel> getSc1() {
+			return sc1;
+		}
+
+		public void setSc1(Optional<SocketChannel> sc1) {
+			this.sc1 = sc1;
+		}
+
+		public Optional<SocketChannel> getSc2() {
+			return sc2;
+		}
+
+		public void setSc2(Optional<SocketChannel> sc2) {
+			this.sc2 = sc2;
+		}
+	}
+	static class PairCtxPrivate {
 		Optional<PrivateContext> ctx1;
 		Optional<PrivateContext> ctx2;
 
-		public Pair() {
+		public PairCtxPrivate() {
 			this.ctx1 = Optional.empty();
 			this.ctx2 = Optional.empty();
 		}
@@ -52,7 +76,7 @@ public class ServerChaton {
 	final Map<String, ArrayList<String>> requests = new HashMap<>();
     final ArrayList<Long> ids = new ArrayList<>();
     private final ServerSocketChannel serverSocketChannel;
-    private final Selector selector;
+    final Selector selector;
     final Map<Long, Pair> connectionsId = new HashMap<>();
     final Map<SocketChannel, PrivateContext> connections = new HashMap<>();
 
@@ -92,6 +116,7 @@ public class ServerChaton {
 				//((Context) key.attachment()).doWrite();
 				
 				var tmp = key.attachment();
+				System.out.println("TREAT KEY : "+ tmp);
 				if(tmp instanceof Context) {
 					((Context) tmp).doWrite();
 				}else if(tmp instanceof PrivateContext){
@@ -101,6 +126,7 @@ public class ServerChaton {
 				}
 			}
 			if (key.isValid() && key.isReadable()) {
+				System.out.println("Key of treatKey "  +key);
 				var tmp = key.attachment();
 				if(tmp instanceof Context) {
 					((Context) tmp).doRead();
