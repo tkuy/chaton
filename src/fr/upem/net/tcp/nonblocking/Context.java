@@ -281,7 +281,7 @@ class Context implements FrameVisitor {
             try {
                 //Register new the new key
                 Context ctx1 = pair.ctx1.get();
-                newKey = pair.ctx1.get().sc.register(server.selector, SelectionKey.OP_READ);
+                newKey = ctx1.sc.register(server.selector, SelectionKey.OP_READ);
                 client1  = new PrivateContext(server, newKey, ctx1.bbin, ctx1.bbout);
                 newKey.attach(client1);
             } catch (ClosedChannelException e) {

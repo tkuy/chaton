@@ -1,6 +1,8 @@
 package fr.upem.net.tcp.nonblocking;
 
 import fr.upem.net.tcp.http.HTTPReader;
+import fr.upem.net.tcp.nonblocking.frame.FrameLoginPrivateConnection;
+import fr.upem.net.tcp.nonblocking.frame.FramePrivateVisitor;
 import fr.upem.net.tcp.nonblocking.frame.reader.IntReader;
 
 import java.io.IOException;
@@ -14,6 +16,8 @@ import java.util.Queue;
 import java.util.logging.Logger;
 
 class PrivateContext {
+
+
     private enum State{
         WAITING_OP, AUTHENTICATED
     }
@@ -57,6 +61,7 @@ class PrivateContext {
                                 this.state = State.WAITING_OP;
                                 intReader.reset();
                                 processIn();
+                                state = State.AUTHENTICATED;
                             }
                         case REFILL:
                             return;
@@ -65,6 +70,13 @@ class PrivateContext {
                             return;
                     }
                 case AUTHENTICATED:
+                    PrivateContext target = server.connections.get(sc);
+                    bbin.flip();
+                    int size = bbin.remaining();
+                    if(size!=0) {
+                        ByteBuffer tmpBbin = ByteBuffer.allocate(size).put(bbin);
+                        target.queueByteBuffer(tmpBbin);
+                    }
                     return;
             }
         }
