@@ -1,5 +1,6 @@
 package fr.upem.net.tcp.nonblocking;
 
+import fr.upem.net.tcp.http.FillByteBuffer;
 import fr.upem.net.tcp.http.HTTPReader;
 import fr.upem.net.tcp.nonblocking.frame.FrameLoginPrivateConnection;
 import fr.upem.net.tcp.nonblocking.frame.FramePrivateVisitor;
@@ -99,16 +100,14 @@ class PrivateContext {
      *
      */
     private void processOut() {
-			/*System.out.println("ProcessOutPrivate");
+			System.out.println("ProcessOutPrivate");
 			while (!queue.isEmpty()) {
-				//FIXME: Use FillByteBuffer when it works.
 				ByteBuffer bb = queue.element();
 				bb.flip();
 				if(bbout.remaining() >= bb.limit()) {
 					bbout.put(bb);
 					queue.poll();
 				} else {
-					//TODO: Check that it come out on write mode
 					//Not enough space. do not poll.
 					//Write mode
 					bb.compact();
@@ -117,8 +116,8 @@ class PrivateContext {
 					//bb.compact();
 					return;
 				}
-			}*/
-        System.out.println("ProcessOutPrivate");
+			}
+        /*System.out.println("ProcessOutPrivate");
         while (!queue.isEmpty()) {
             ByteBuffer bb = queue.element();
             bb.flip();
@@ -129,7 +128,7 @@ class PrivateContext {
                 bb.compact();
                 return;
             }
-        }
+        }*/
     }
 
     /**
