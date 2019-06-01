@@ -93,6 +93,7 @@ class PrivateContext {
         queue.add(byteBuffer);
         processOut();
         updateInterestOps();
+        server.connections.get(sc).updateInterestOps();
     }
 
     /**

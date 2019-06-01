@@ -17,6 +17,7 @@ public class FillByteBuffer {
         //Saisie la bonne proportion de bbin
         int oldLimit = bbin.limit();
         int sizeToExtract = bbout.remaining();
+        System.out.println("Size to Extract : " + sizeToExtract);
         bbin.limit(sizeToExtract);
         //Remplie le bbout
         bbout.put(bbin);
