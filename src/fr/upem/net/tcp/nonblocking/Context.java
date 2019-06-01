@@ -122,11 +122,13 @@ class Context implements FrameVisitor {
      */
 
     private void updateInterestOps() {
-        System.out.println("UPDATE INTERESTOPS");
         int interestOps = 0;
-        /*if(!key.isValid()) {
+        if(!key.isValid()) {
+            System.out.println(key+" is invalid");
             return;
-        }*/
+        } else {
+            System.out.println(key+" is valid");
+        }
         if(!closed && bbin.hasRemaining()) {
             interestOps |= SelectionKey.OP_READ;
         }
@@ -266,14 +268,11 @@ class Context implements FrameVisitor {
     public void visitLoginPrivateConnection(FrameLoginPrivateConnection frame) {
         System.out.println("VisitLoginPrivateConnection");
         Pair pair = server.connectionsId.get(frame.getId());
-        //PrivateContext privateContext = new PrivateContext(server, key);
-        if(pair.sc1.isEmpty()) {
-            pair.sc1=Optional.of(sc);
-            key.attach(null);
-            System.out.println("Key CANCELLed");
+        if(pair.ctx1.isEmpty()) {
+            pair.ctx1=Optional.of(this);
             key.cancel();
-            System.out.println(key);
-        } else if (pair.sc2.isEmpty()){
+            System.out.println("Key that should be cancelled : "+key);
+        } else if (pair.ctx2.isEmpty()){
             System.out.println("Deuxieme etape");
             server.connectionsId.remove(frame.getId());
             //Client 1
@@ -281,22 +280,24 @@ class Context implements FrameVisitor {
             PrivateContext client1;
             try {
                 //Register new the new key
-                newKey = pair.sc1.get().register(server.selector, SelectionKey.OP_READ);
-                client1  = new PrivateContext(server, newKey);
+                Context ctx1 = pair.ctx1.get();
+                newKey = pair.ctx1.get().sc.register(server.selector, SelectionKey.OP_READ);
+                client1  = new PrivateContext(server, newKey, ctx1.bbin, ctx1.bbout);
                 newKey.attach(client1);
             } catch (ClosedChannelException e) {
                 return;
             }
-            PrivateContext client2 = new PrivateContext(server, this.key);
+            PrivateContext client2 = new PrivateContext(server, this.key, this.bbin, this.bbout);
 
             //Client 2
-            pair.setSc2(Optional.of(sc));
+            pair.setCtx2(Optional.of(this));
             this.key.attach(client2);
             System.out.println("KEY2: "+ this.key);
             //Put the context.
-            server.connections.put(pair.sc1.get(), client2);
-            server.connections.put(pair.sc2.get(), client1);
+            server.connections.put(pair.ctx1.get().sc, client2);
+            server.connections.put(pair.ctx2.get().sc, client1);
             //Send the ESTABLISHED frame
+            System.out.println("Send the established frame");
             client1.queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
             client2.queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
             client1.updateInterestOps();

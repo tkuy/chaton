@@ -20,21 +20,24 @@ class PrivateContext {
     private static int BUFFER_SIZE = 1024;
     final private SelectionKey key;
     final SocketChannel sc;
-    final private ByteBuffer bbin = ByteBuffer.allocate(BUFFER_SIZE);
-    final private ByteBuffer bbout = ByteBuffer.allocate(BUFFER_SIZE);
+    final private ByteBuffer bbin;
+    final private ByteBuffer bbout;
     final private Queue<ByteBuffer> queue = new LinkedList<>();
     final private ServerChaton server;
     private boolean closed = false;
     private State state;
-    private IntReader intReader = new IntReader(bbin);
+    private IntReader intReader;
     static private Logger logger = Logger.getLogger(PrivateContext.class.getName());
 
     private static Charset UTF8 = StandardCharsets.UTF_8;
-    PrivateContext(ServerChaton server, SelectionKey key){
+    PrivateContext(ServerChaton server, SelectionKey key, ByteBuffer bbin, ByteBuffer bbout){
         this.key = key;
         this.sc = (SocketChannel) key.channel();
         this.server = server;
         this.state = State.WAITING_OP;
+        this.bbin = bbin;
+        this.bbout = bbout;
+        this.intReader = new IntReader(bbin);
     }
     /**
      * Process the content of bbin

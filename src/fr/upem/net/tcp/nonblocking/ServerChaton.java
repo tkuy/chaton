@@ -18,28 +18,28 @@ import fr.upem.net.tcp.nonblocking.frame.*;
 public class ServerChaton {
 
 	static class Pair {
-		Optional<SocketChannel> sc1;
-		Optional<SocketChannel> sc2;
+		Optional<Context> ctx1;
+		Optional<Context> ctx2;
 
 		public Pair() {
-			this.sc1 = Optional.empty();
-			this.sc2 = Optional.empty();
+			this.ctx1 = Optional.empty();
+			this.ctx2 = Optional.empty();
 		}
 
-		public Optional<SocketChannel> getSc1() {
-			return sc1;
+		public Optional<Context> getCtx1() {
+			return ctx1;
 		}
 
-		public void setSc1(Optional<SocketChannel> sc1) {
-			this.sc1 = sc1;
+		public void setCtx1(Optional<Context> ctx1) {
+			this.ctx1 = ctx1;
 		}
 
-		public Optional<SocketChannel> getSc2() {
-			return sc2;
+		public Optional<Context> getCtx2() {
+			return ctx2;
 		}
 
-		public void setSc2(Optional<SocketChannel> sc2) {
-			this.sc2 = sc2;
+		public void setCtx2(Optional<Context> ctx2) {
+			this.ctx2 = ctx2;
 		}
 	}
 	static class PairCtxPrivate {
