@@ -3,6 +3,11 @@ package fr.upem.net.tcp.http;
 import java.nio.ByteBuffer;
 
 public class FillByteBuffer {
+    /**
+     * Try to fill bbout with bbin. Take and returns bbin and bbout on write mode.
+     * @param bbin
+     * @param bbout
+     */
     public static void fill(ByteBuffer bbin, ByteBuffer bbout) {
         //mode ecriture
 

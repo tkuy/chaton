@@ -1,9 +1,6 @@
 package fr.upem.net.tcp.nonblocking;
 
 import fr.upem.net.tcp.nonblocking.frame.*;
-import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginPrivateConnectionReader;
-import fr.upem.net.tcp.nonblocking.frame.reader.FrameLoginReader;
-import fr.upem.net.tcp.nonblocking.frame.reader.IntReader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -187,6 +184,12 @@ class Context implements FrameVisitor {
         updateInterestOps();
     }
     //Connection OP = 1 or 2
+
+    /**
+     * Connection OP = 1 or 2.
+     * Return 1 if the login is not already used and the size of the login has a size less than 30 btyes. Else return 2.
+     * @param frame
+     */
     @Override
     public void visitLoginFrame(FrameLogin frame) {
         String login = frame.getLogin();
@@ -205,10 +208,18 @@ class Context implements FrameVisitor {
         }
         queueFrame(frameResponse);
     }
+
     @Override
     public void visitResponseLoginFrame(FrameLoginResponse frame) {
         queueFrame(frame);
     }
+
+    /**
+     *  Broadcast a message to every user of the server.
+     *  The size must not exceed 1024 bytes.
+     *  OP=3
+     * @param frame
+     */
     @Override
     public void visitBroadcastFrame(FrameBroadcast frame) {
         if(UTF8.encode(frame.getMessage()).remaining()>1024) {
@@ -219,7 +230,12 @@ class Context implements FrameVisitor {
             server.broadcast(frame);
         }
     }
-
+    /**
+     *  Send a message to a specific user of the server.
+     *  The size must not exceed 1024 bytes.
+     *  OP=4
+     * @param frame
+     */
     @Override
     public void visitPrivateMessage(FramePrivateMessage frame) {
         Context targetCtx = server.pseudos.get(frame.getTarget());
@@ -233,7 +249,11 @@ class Context implements FrameVisitor {
             logger.info("Private message from "+frame.getSender() + " to "+ frame.getTarget() + "failed");
         }
     }
-    //OP = 5. Ask for a connection
+
+    /**
+     * Ask a connection from sender to target.
+     * @param frame
+     */
     @Override
     public void visitPrivateConnection(FramePrivateConnection frame) {
         Context targetCtx = server.pseudos.get(frame.getTarget());
@@ -246,8 +266,12 @@ class Context implements FrameVisitor {
             logger.info("Private connection request from "+frame.getRequester() + " to "+ frame.getTarget() + "failed");
         }
     }
-    //OP 6 OR 7. Accept or refuse the connection
-    //Case 6  : Send the ID to the requester and target
+
+    /**
+     * OP 6 OR 7. Accept or refuse the request of the connection.
+     * Case 6  : Send the ID to the requester and target
+     * @param frame
+     */
     @Override
     public void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame) {
         ArrayList<String> targets = server.requests.get(frame.getRequester());
@@ -270,7 +294,12 @@ class Context implements FrameVisitor {
             }
         }
     }
-    //OP = 9. Receive the frame with the ID. Migrate from Context to ContextPrivate
+    /**
+     * OP = 9. Receive the frame with the ID. Migrate from Context to ContextPrivate
+     * If the request has been previously made, a PrivateContext is created and the private connection is started.
+     * The ESTABLISHED frame si sent.
+     *
+     */
     @Override
     public void visitLoginPrivateConnection(FrameLoginPrivateConnection frame) {
         System.out.println("VisitLoginPrivateConnection");
