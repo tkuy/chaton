@@ -190,9 +190,10 @@ class Context implements FrameVisitor {
     @Override
     public void visitLoginFrame(FrameLogin frame) {
         String login = frame.getLogin();
+        boolean rightSize = UTF8.encode(login).remaining() < 30;
         logger.info("Received request to connect for the login : "+ login);
         FrameLoginResponse frameResponse;
-        if(!server.pseudos.containsKey(login)) {
+        if(!server.pseudos.containsKey(login) && rightSize) {
             frameResponse = new FrameLoginResponse(FrameLoginResponse.LOGIN_ACCEPTED);
             server.pseudos.put(login, this);
             this.login = login;
@@ -210,6 +211,9 @@ class Context implements FrameVisitor {
     }
     @Override
     public void visitBroadcastFrame(FrameBroadcast frame) {
+        if(UTF8.encode(frame.getMessage()).remaining()>1024) {
+            return;
+        }
         if(frame.getSender().equals(login)) {
             logger.info("Broadcast frame send by "+ login);
             server.broadcast(frame);
@@ -219,6 +223,9 @@ class Context implements FrameVisitor {
     @Override
     public void visitPrivateMessage(FramePrivateMessage frame) {
         Context targetCtx = server.pseudos.get(frame.getTarget());
+        if(UTF8.encode(frame.getContent()).remaining()>1024) {
+            return;
+        }
         if(frame.getSender().equals(login) && targetCtx!=null) {
             logger.info("Private message from "+frame.getSender() + " to "+ frame.getTarget());
             targetCtx.queueFrame(frame);
@@ -271,9 +278,11 @@ class Context implements FrameVisitor {
         if(pair.ctx1.isEmpty()) {
             pair.ctx1=Optional.of(this);
             key.cancel();
+            this.closed = true;
             System.out.println("Key that should be cancelled : "+key);
         } else if (pair.ctx2.isEmpty()){
             System.out.println("Deuxieme etape");
+            this.closed = true;
             server.connectionsId.remove(frame.getId());
             //Client 1
             SelectionKey newKey;

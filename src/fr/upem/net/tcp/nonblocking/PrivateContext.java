@@ -44,7 +44,7 @@ class PrivateContext {
         this.bbout = bbout;
         this.intReader = new IntReader(bbin);
     }
-    /**
+    /**1
      * Process the content of bbin
      *
      * The convention is that bbin is in write-mode before the call
