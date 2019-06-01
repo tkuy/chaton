@@ -61,9 +61,9 @@ class PrivateContext {
                             if (op == 10) {
                                 this.state = State.WAITING_OP;
                                 intReader.reset();
-                                processIn();
                                 state = State.AUTHENTICATED;
                             }
+                            break;
                         case REFILL:
                             return;
                         case ERROR:
@@ -71,8 +71,10 @@ class PrivateContext {
                             return;
                     }
                 case AUTHENTICATED:
+                    System.out.println("CASE AUTHENTICATED");
                     PrivateContext target = server.connections.get(sc);
                     bbin.flip();
+                    //System.out.println("AUTHENTIFICAT " + UTF8.decode(bbin));
                     int size = bbin.remaining();
                     if(size!=0) {
                         ByteBuffer tmpBbin = ByteBuffer.allocate(size).put(bbin);
@@ -92,7 +94,7 @@ class PrivateContext {
         logger.info("QueueByteBuffer send to "+this);
         queue.add(byteBuffer);
         processOut();
-        updateInterestOps();
+        //updateInterestOps();
         server.connections.get(sc).updateInterestOps();
     }
 
