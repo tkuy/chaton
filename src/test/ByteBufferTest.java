@@ -30,14 +30,5 @@ public class ByteBufferTest {
         bbin.compact();
         bbin.put(UTF8.encode("popo"));
         System.out.println(UTF8.decode(bbin.flip()));
-        /*bbin.position(0);
-        int oldLimit = bbin.limit();
-        int tailleAExtraire = bbout.remaining();
-        bbin.limit(tailleAExtraire);
-        bbout.put(bbin);
-        System.out.println(UTF8.decode(bbout.flip()));
-
-        bbin.compact();
-        System.out.println(UTF8.decode(bbin));*/
     }
 }

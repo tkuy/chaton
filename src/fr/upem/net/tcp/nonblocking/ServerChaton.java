@@ -115,7 +115,6 @@ public class ServerChaton {
 			if (key.isValid() && key.isWritable()) {
 
 				var tmp = key.attachment();
-				System.out.println("TREAT KEY : "+ tmp);
 				if(tmp instanceof Context) {
 					((Context) tmp).doWrite();
 				}else if(tmp instanceof PrivateContext){

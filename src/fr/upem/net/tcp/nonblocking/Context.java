@@ -58,9 +58,6 @@ class Context implements FrameVisitor {
             switch (reader.process()) {
                 case DONE:
                     Frame frame = (Frame) reader.get();
-                    if(frame==null) {
-                        System.out.println("frame is null");
-                    }
                     frame.accept(this);
                     reader.reset();
                     break;
@@ -93,7 +90,7 @@ class Context implements FrameVisitor {
     private void processOut() {
         while (!queue.isEmpty()) {
             Frame frame = queue.element();
-            System.out.println("Send with opCode : "+frame.getOpCode());
+            logger.info("Send with opCode : "+frame.getOpCode());
             ByteBuffer bb = frame.toByteBuffer();
             bb.flip();
             if(bbout.remaining() >= bb.limit()) {
@@ -120,10 +117,7 @@ class Context implements FrameVisitor {
     private void updateInterestOps() {
         int interestOps = 0;
         if(!key.isValid()) {
-            System.out.println(key+" is invalid");
             return;
-        } else {
-            System.out.println(key+" is valid");
         }
         if(!closed && bbin.hasRemaining()) {
             interestOps |= SelectionKey.OP_READ;
@@ -275,7 +269,6 @@ class Context implements FrameVisitor {
     @Override
     public void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame) {
         ArrayList<String> targets = server.requests.get(frame.getRequester());
-        System.out.println(targets);
         System.out.println("visitPrivateConnectionResponse");
         //If the requester has made a request and
         if(targets!= null && targets.contains(frame.getTarget())) {
@@ -284,7 +277,6 @@ class Context implements FrameVisitor {
                 server.ids.add(id);
                 FrameIdPrivateConnectionResponse frameIdPrivateConnectionResponse = new FrameIdPrivateConnectionResponse(frame.getRequester(), frame.getTarget(), id);
                 this.queueFrame(frameIdPrivateConnectionResponse);
-                System.out.println(server.pseudos.get(frame.getRequester()) + frame.getRequester());
                 server.pseudos.get(frame.getRequester()).queueFrame(frameIdPrivateConnectionResponse);
                 server.connectionsId.put(id, new Pair());
             }
@@ -308,9 +300,7 @@ class Context implements FrameVisitor {
             pair.ctx1=Optional.of(this);
             key.cancel();
             this.closed = true;
-            System.out.println("Key that should be cancelled : "+key);
         } else if (pair.ctx2.isEmpty()){
-            System.out.println("Deuxieme etape");
             this.closed = true;
             server.connectionsId.remove(frame.getId());
             //Client 1
@@ -330,12 +320,10 @@ class Context implements FrameVisitor {
             //Client 2
             pair.setCtx2(Optional.of(this));
             this.key.attach(client2);
-            System.out.println("KEY2: "+ this.key);
             //Put the context.
             server.connections.put(pair.ctx1.get().sc, client2);
             server.connections.put(pair.ctx2.get().sc, client1);
             //Send the ESTABLISHED frame
-            System.out.println("Send the established frame");
             client1.queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
             client2.queueByteBuffer(new FramePrivateEstablished().toByteBuffer());
             client1.updateInterestOps();

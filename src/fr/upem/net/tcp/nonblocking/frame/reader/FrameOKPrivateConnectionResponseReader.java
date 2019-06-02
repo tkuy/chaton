@@ -48,7 +48,6 @@ public class FrameOKPrivateConnectionResponseReader implements Reader{
         if (state != State.DONE) {
             throw new IllegalStateException();
         }
-        System.out.println("Asked by " + requester + " target= " + target);
         return new FramePrivateConnectionResponse(requester, target, FramePrivateConnectionResponse.OK_PRIVATE);
     }
 

@@ -61,7 +61,6 @@ public class FramePrivateMessageReader implements Reader {
         if (state != State.DONE) {
             throw new IllegalStateException();
         }
-        System.out.println(sender + target + content);
         return new FramePrivateMessage(sender,target,content);
     }
 

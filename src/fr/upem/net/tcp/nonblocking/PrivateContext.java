@@ -48,17 +48,12 @@ class PrivateContext {
         for(;;){
             PrivateContext target = server.connections.get(sc);
             bbin.flip();
-            System.out.println(this + " bbin: " +bbin);
             int size = bbin.remaining();
-            System.out.println(size);
             if(size!=0) {
                 ByteBuffer tmpBbin = ByteBuffer.allocate(size).put(bbin);
-                //System.out.println(this +" " +StandardCharsets.US_ASCII.decode(tmpBbin.flip()).toString().replace("\r\n", "*"));
                 target.queueByteBuffer(tmpBbin);
                 bbin.compact();
             }
-            System.out.println(this +" "  +bbin);
-            System.out.println("FIN PROCESS IN");
             return;
         }
     }
@@ -80,40 +75,22 @@ class PrivateContext {
      *
      */
     private void processOut() {
-			System.out.println(this +" " + "ProcessOutPrivate");
 			while (!queue.isEmpty()) {
 				ByteBuffer bb = queue.element();
-                System.out.println("==> "+ bb);
                 System.out.println("==>"+StandardCharsets.US_ASCII.decode(bb.flip()));
                 bb.flip();
-                System.out.println(this +" " + "BBLIMIT : " + bb.limit());
-                System.out.println(this +" " + "BBREMAING : " + bbout.remaining());
 				if(bbout.remaining()>=bb.limit()) {
-                    System.out.println("ASSEZ de PLACE ");
 					bbout.put(bb);
 					queue.poll();
 				} else {
 					//Not enough space. do not poll.
 					//Write mode
 					bb.compact();
-                    System.out.println("FILL!!");
 					FillByteBuffer.fill(bb, bbout);
 					//FillByteBuffer let the bbin bbout on write mode, compact is not useful.
 					return;
 				}
 			}
-        /*System.out.println("ProcessOutPrivate");
-        while (!queue.isEmpty()) {
-            ByteBuffer bb = queue.element();
-            bb.flip();
-            if(bbout.remaining() >= bb.limit()) {
-                bbout.put(bb);
-                queue.poll();
-            } else {
-                bb.compact();
-                return;
-            }
-        }*/
     }
 
     /**
@@ -128,11 +105,7 @@ class PrivateContext {
      */
 
     void updateInterestOps() {
-        System.out.println(this +" " + "UPDATE INTERESTOPS");
         int interestOps = 0;
-        System.out.println(this +" " + "Bbin.hasRemaining : "+ bbin.hasRemaining());
-        System.out.println(this +" " + "Bbin "+ bbin);
-        System.out.println(this +" " + "Bbout "+ bbout);
         if(!closed && bbin.hasRemaining()) {
             interestOps |= SelectionKey.OP_READ;
         }
@@ -144,7 +117,6 @@ class PrivateContext {
         } else {
             key.interestOps(interestOps);
         }
-        System.out.println("FIN UPDATE INTERESTOPS");
     }
 
     private void silentlyClose() {
@@ -182,7 +154,6 @@ class PrivateContext {
      */
 
     void doWrite() throws IOException {
-        System.out.println("DO WRITE");
         sc.write(bbout.flip());
         bbout.compact();
         processOut();

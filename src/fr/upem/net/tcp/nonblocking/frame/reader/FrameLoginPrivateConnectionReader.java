@@ -25,7 +25,6 @@ public class FrameLoginPrivateConnectionReader implements Reader {
         switch (state) {
             case WAITING_ID:
                 ProcessStatus status = longReader.process();
-                System.out.println(status);
                 if (status == ProcessStatus.DONE) {
                     id = (long) longReader.get();
                     longReader.reset();
