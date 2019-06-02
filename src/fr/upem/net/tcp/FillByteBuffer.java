@@ -10,13 +10,12 @@ public class FillByteBuffer {
      * @param bbout must be in write mode
      */
     public static void fill(ByteBuffer bbin, ByteBuffer bbout) {
-
         //mode ecriture
 
         //mode lecture
-        int oldLimit = bbin.limit();
         bbin.flip();
         //Saisie la bonne proportion de bbin
+        int oldLimit = bbin.limit();
         int sizeToExtract = bbout.remaining();
         System.out.println("Size to Extract : " + sizeToExtract);
         bbin.limit(sizeToExtract);
