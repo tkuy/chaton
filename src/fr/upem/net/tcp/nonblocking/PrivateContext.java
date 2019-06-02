@@ -17,9 +17,6 @@ import java.util.logging.Logger;
  * Treat the private connections. It only forwards the bytes from the sender to the target.
  */
 class PrivateContext {
-    private enum State{
-        WAITING_OP, AUTHENTICATED
-    }
     private static int BUFFER_SIZE = 1024;
     final private SelectionKey key;
     final SocketChannel sc;
@@ -28,7 +25,6 @@ class PrivateContext {
     final private Queue<ByteBuffer> queue = new LinkedList<>();
     final private ServerChaton server;
     private boolean closed = false;
-    private State state;
     private IntReader intReader;
     static private Logger logger = Logger.getLogger(PrivateContext.class.getName());
 
@@ -37,7 +33,6 @@ class PrivateContext {
         this.key = key;
         this.sc = (SocketChannel) key.channel();
         this.server = server;
-        this.state = State.WAITING_OP;
         this.bbin = bbin;
         this.bbout = bbout;
         this.intReader = new IntReader(bbin);
@@ -51,39 +46,20 @@ class PrivateContext {
      */
     private void processIn() {
         for(;;){
-            switch (state) {
-                case WAITING_OP:
-                    switch (intReader.process()) {
-                        case DONE:
-                            int op = (int) intReader.get();
-                            if (op == 10) {
-                                this.state = State.WAITING_OP;
-                                intReader.reset();
-                                state = State.AUTHENTICATED;
-                            }
-                            break;
-                        case REFILL:
-                            return;
-                        case ERROR:
-                            silentlyClose();
-                            return;
-                    }
-                case AUTHENTICATED:
-                    PrivateContext target = server.connections.get(sc);
-                    bbin.flip();
-                    System.out.println(this + " bbin: " +bbin);
-                    int size = bbin.remaining();
-                    System.out.println(size);
-                    if(size!=0) {
-                        ByteBuffer tmpBbin = ByteBuffer.allocate(size).put(bbin);
-                        System.out.println(this +" " +StandardCharsets.US_ASCII.decode(tmpBbin.flip()).toString().replace("\r\n", "*"));
-                        target.queueByteBuffer(tmpBbin);
-                        bbin.clear();
-                    }
-                    System.out.println(this +" "  +bbin);
-                    System.out.println("FIN PROCESS IN");
-                    return;
+            PrivateContext target = server.connections.get(sc);
+            bbin.flip();
+            System.out.println(this + " bbin: " +bbin);
+            int size = bbin.remaining();
+            System.out.println(size);
+            if(size!=0) {
+                ByteBuffer tmpBbin = ByteBuffer.allocate(size).put(bbin);
+                //System.out.println(this +" " +StandardCharsets.US_ASCII.decode(tmpBbin.flip()).toString().replace("\r\n", "*"));
+                target.queueByteBuffer(tmpBbin);
+                bbin.compact();
             }
+            System.out.println(this +" "  +bbin);
+            System.out.println("FIN PROCESS IN");
+            return;
         }
     }
 
