@@ -96,7 +96,6 @@ class PrivateContext {
 					//Not enough space. do not poll.
 					//Write mode
 					bb.compact();
-                    System.out.println("FILL!!");
 					FillByteBuffer.fill(bb, bbout);
 					//FillByteBuffer let the bbin bbout on write mode, compact is not useful.
 					return;
@@ -169,7 +168,7 @@ class PrivateContext {
             closed = true;
         }
         processIn();
-        updateInterestOps();
+        server.connections.get(sc).updateInterestOps();
     }
 
     /**
@@ -182,11 +181,11 @@ class PrivateContext {
      */
 
     void doWrite() throws IOException {
-        System.out.println("DO WRITE");
         sc.write(bbout.flip());
         bbout.compact();
         processOut();
-        server.connections.get(sc).updateInterestOps();
+        updateInterestOps();
+        //server.connections.get(sc).updateInterestOps();
     }
 
 }
