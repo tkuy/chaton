@@ -157,7 +157,7 @@ class PrivateContext {
         sc.write(bbout.flip());
         bbout.compact();
         processOut();
-        server.connections.get(sc).updateInterestOps();
+        updateInterestOps();
     }
 
 }
