@@ -1,4 +1,4 @@
-package fr.upem.net.tcp.http;
+package fr.upem.net.tcp;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -6,8 +6,8 @@ import java.nio.charset.StandardCharsets;
 public class FillByteBuffer {
     /**
      * Try to fill bbout with bbin. Take and returns bbin and bbout on write mode.
-     * @param bbin
-     * @param bbout
+     * @param bbin must be in write mode
+     * @param bbout must be in write mode
      */
     public static void fill(ByteBuffer bbin, ByteBuffer bbout) {
         //mode ecriture

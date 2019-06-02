@@ -1,9 +1,6 @@
 package fr.upem.net.tcp.nonblocking;
 
-import fr.upem.net.tcp.http.FillByteBuffer;
-import fr.upem.net.tcp.http.HTTPReader;
-import fr.upem.net.tcp.nonblocking.frame.FrameLoginPrivateConnection;
-import fr.upem.net.tcp.nonblocking.frame.FramePrivateVisitor;
+import fr.upem.net.tcp.FillByteBuffer;
 import fr.upem.net.tcp.nonblocking.frame.reader.IntReader;
 
 import java.io.IOException;
@@ -16,9 +13,10 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.logging.Logger;
 
+/**
+ * Treat the private connections. It only forwards the bytes from the sender to the target.
+ */
 class PrivateContext {
-
-
     private enum State{
         WAITING_OP, AUTHENTICATED
     }
@@ -71,7 +69,6 @@ class PrivateContext {
                             return;
                     }
                 case AUTHENTICATED:
-                    System.out.println(this +" " + "CASE AUTHENTICATED");
                     PrivateContext target = server.connections.get(sc);
                     bbin.flip();
                     System.out.println(this + " bbin: " +bbin);
@@ -83,7 +80,6 @@ class PrivateContext {
                         System.out.println(this +" " +StandardCharsets.US_ASCII.decode(tmpBbin.flip()).toString().replace("\r\n", "*"));
                         target.queueByteBuffer(tmpBbin);
                         bbin.clear();
-                        //bbin.clear();
                     }
                     //bbin.compact();
                     System.out.println(this +" "  +bbin);

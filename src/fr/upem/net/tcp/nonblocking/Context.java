@@ -14,6 +14,10 @@ import java.util.logging.Logger;
 
 import static fr.upem.net.tcp.nonblocking.ServerChaton.*;
 
+/**
+ * Context is used to treat the frame with op from 0 to 9.
+ * For the private connection, consult the class PrivateContext
+ */
 class Context implements FrameVisitor {
     static private Logger logger = Logger.getLogger(Context.class.getName());
     static private int BUFFER_SIZE = 1_024;
@@ -33,12 +37,7 @@ class Context implements FrameVisitor {
         this.key = key;
         this.sc = (SocketChannel) key.channel();
         this.server = server;
-        //this.state = State.WAITING_OP;
     }
-
-    /*private enum State {
-        AUTHENTICATED
-    }*/
 
     /**
      * Process the content of bbin
@@ -187,7 +186,7 @@ class Context implements FrameVisitor {
 
     /**
      * Connection OP = 1 or 2.
-     * Return 1 if the login is not already used and the size of the login has a size less than 30 btyes. Else return 2.
+     * Returns 1 if the login is not already used and the size of the login has less than 30 btyes. Else returns 2.
      * @param frame
      */
     @Override
@@ -234,7 +233,7 @@ class Context implements FrameVisitor {
      *  Send a message to a specific user of the server.
      *  The size must not exceed 1024 bytes.
      *  OP=4
-     * @param frame
+     * @param frame is type of FramePrivateMessage.
      */
     @Override
     public void visitPrivateMessage(FramePrivateMessage frame) {
@@ -252,7 +251,7 @@ class Context implements FrameVisitor {
 
     /**
      * Ask a connection from sender to target.
-     * @param frame
+     * @param frame is type of FramePrivateConnection
      */
     @Override
     public void visitPrivateConnection(FramePrivateConnection frame) {
@@ -270,7 +269,8 @@ class Context implements FrameVisitor {
     /**
      * OP 6 OR 7. Accept or refuse the request of the connection.
      * Case 6  : Send the ID to the requester and target
-     * @param frame
+     * If there's no previous request, the message is ignored
+     * @param frame is type of FramePrivateConnectionResponse
      */
     @Override
     public void visitPrivateConnectionResponse(FramePrivateConnectionResponse frame) {
@@ -298,7 +298,7 @@ class Context implements FrameVisitor {
      * OP = 9. Receive the frame with the ID. Migrate from Context to ContextPrivate
      * If the request has been previously made, a PrivateContext is created and the private connection is started.
      * The ESTABLISHED frame si sent.
-     *
+     * @param frame is type of FrameLoginPrivateConnection
      */
     @Override
     public void visitLoginPrivateConnection(FrameLoginPrivateConnection frame) {
