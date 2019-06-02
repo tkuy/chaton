@@ -71,15 +71,24 @@ class PrivateContext {
                             return;
                     }
                 case AUTHENTICATED:
-                    System.out.println("CASE AUTHENTICATED");
+                    System.out.println(this +" " + "CASE AUTHENTICATED");
                     PrivateContext target = server.connections.get(sc);
                     bbin.flip();
+                    System.out.println(this + " bbin: " +bbin);
                     //System.out.println("AUTHENTIFICAT " + UTF8.decode(bbin));
                     int size = bbin.remaining();
+                    System.out.println(size);
                     if(size!=0) {
                         ByteBuffer tmpBbin = ByteBuffer.allocate(size).put(bbin);
+                        System.out.println(this +" " +StandardCharsets.US_ASCII.decode(tmpBbin.flip()).toString().replace("\r\n", "*"));
                         target.queueByteBuffer(tmpBbin);
+                        bbin.clear();
+                        //bbin.clear();
                     }
+                    //bbin.compact();
+                    System.out.println(this +" "  +bbin);
+                    System.out.println("FIN PROCESS IN");
+                    //bbin.clear();
                     return;
             }
         }
@@ -91,11 +100,10 @@ class PrivateContext {
      * @param byteBuffer
      */
     void queueByteBuffer(ByteBuffer byteBuffer) {
-        logger.info("QueueByteBuffer send to "+this);
+        logger.info(this +" " + "QueueByteBuffer send to "+this);
         queue.add(byteBuffer);
         processOut();
-        //updateInterestOps();
-        server.connections.get(sc).updateInterestOps();
+        updateInterestOps();
     }
 
     /**
@@ -103,11 +111,16 @@ class PrivateContext {
      *
      */
     private void processOut() {
-			System.out.println("ProcessOutPrivate");
+			System.out.println(this +" " + "ProcessOutPrivate");
 			while (!queue.isEmpty()) {
 				ByteBuffer bb = queue.element();
-				bb.flip();
-				if(bbout.remaining() >= bb.limit()) {
+                System.out.println("==> "+ bb);
+                System.out.println("==>"+StandardCharsets.US_ASCII.decode(bb.flip()));
+                bb.flip();
+                System.out.println(this +" " + "BBLIMIT : " + bb.limit());
+                System.out.println(this +" " + "BBREMAING : " + bbout.remaining());
+				if(bbout.remaining()>=bb.limit()) {
+                    System.out.println("ASSEZ de PLACE ");
 					bbout.put(bb);
 					queue.poll();
 				} else {
@@ -146,7 +159,11 @@ class PrivateContext {
      */
 
     void updateInterestOps() {
+        System.out.println(this +" " + "UPDATE INTERESTOPS");
         int interestOps = 0;
+        System.out.println(this +" " + "Bbin.hasRemaining : "+ bbin.hasRemaining());
+        System.out.println(this +" " + "Bbin "+ bbin);
+        System.out.println(this +" " + "Bbout "+ bbout);
         if(!closed && bbin.hasRemaining()) {
             interestOps |= SelectionKey.OP_READ;
         }
@@ -158,6 +175,7 @@ class PrivateContext {
         } else {
             key.interestOps(interestOps);
         }
+        System.out.println("FIN UPDATE INTERESTOPS");
     }
 
     private void silentlyClose() {
@@ -182,7 +200,7 @@ class PrivateContext {
             closed = true;
         }
         processIn();
-        updateInterestOps();
+        server.connections.get(sc).updateInterestOps();
     }
 
     /**
@@ -199,6 +217,7 @@ class PrivateContext {
         bbout.compact();
         processOut();
         updateInterestOps();
+        //server.connections.get(sc).updateInterestOps();
     }
 
 }
