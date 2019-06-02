@@ -16,6 +16,9 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * The frame reader
+ */
 public class FrameReaderTest {
     private static Charset UTF8 = StandardCharsets.UTF_8;
     @Test
