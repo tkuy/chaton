@@ -113,8 +113,7 @@ public class ServerChaton {
 		}
 		try {
 			if (key.isValid() && key.isWritable()) {
-				//((Context) key.attachment()).doWrite();
-				
+
 				var tmp = key.attachment();
 				System.out.println("TREAT KEY : "+ tmp);
 				if(tmp instanceof Context) {

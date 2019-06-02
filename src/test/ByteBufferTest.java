@@ -17,7 +17,6 @@ public class ByteBufferTest {
         //Met 3 Bytes
         bbout.put(UTF8.encode("hel"));
         System.out.println(bbout.remaining());
-        //pos =
         bbin.flip();
         int oldLimit = bbin.limit();
         int tailleAExtraire = bbout.remaining();
@@ -39,8 +38,6 @@ public class ByteBufferTest {
         System.out.println(UTF8.decode(bbout.flip()));
 
         bbin.compact();
-        //bbin.position(bbin.limit() - tailleAExtraire +1);
-        //bbin.limit(oldLimit);
         System.out.println(UTF8.decode(bbin));*/
     }
 }

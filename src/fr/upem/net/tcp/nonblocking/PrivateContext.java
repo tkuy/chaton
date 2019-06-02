@@ -72,7 +72,6 @@ class PrivateContext {
                     PrivateContext target = server.connections.get(sc);
                     bbin.flip();
                     System.out.println(this + " bbin: " +bbin);
-                    //System.out.println("AUTHENTIFICAT " + UTF8.decode(bbin));
                     int size = bbin.remaining();
                     System.out.println(size);
                     if(size!=0) {
@@ -81,10 +80,8 @@ class PrivateContext {
                         target.queueByteBuffer(tmpBbin);
                         bbin.clear();
                     }
-                    //bbin.compact();
                     System.out.println(this +" "  +bbin);
                     System.out.println("FIN PROCESS IN");
-                    //bbin.clear();
                     return;
             }
         }
@@ -125,7 +122,6 @@ class PrivateContext {
 					bb.compact();
 					FillByteBuffer.fill(bb, bbout);
 					//FillByteBuffer let the bbin bbout on write mode, compact is not useful.
-					//bb.compact();
 					return;
 				}
 			}

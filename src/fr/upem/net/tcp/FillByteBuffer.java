@@ -14,7 +14,6 @@ public class FillByteBuffer {
 
         //mode lecture
         bbin.flip();
-        //System.out.println("refill with this : " + StandardCharsets.UTF_8.decode(bbin).toString());
         //Saisie la bonne proportion de bbin
         int oldLimit = bbin.limit();
         int sizeToExtract = bbout.remaining();
